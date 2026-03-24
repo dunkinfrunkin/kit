@@ -71,6 +71,7 @@ func New(s *store.Store, secret string, oidc *auth.OIDCVerifier) *Server {
 	})
 
 	srv.mux.HandleFunc("POST /login", srv.handleLogin)
+	srv.mux.HandleFunc("GET /auth/config", srv.handleAuthConfig)
 
 	srv.mux.HandleFunc("GET /skills", srv.handleListAll("skill"))
 	srv.mux.HandleFunc("GET /hooks", srv.handleListAll("hook"))
@@ -139,6 +140,17 @@ func (s *Server) authenticate(r *http.Request) (string, error) {
 	}
 
 	return "", fmt.Errorf("unauthorized: no valid credentials")
+}
+
+func (s *Server) handleAuthConfig(w http.ResponseWriter, r *http.Request) {
+	cfg := map[string]interface{}{
+		"sso_enabled": s.oidc != nil,
+	}
+	if s.oidc != nil {
+		cfg["issuer"] = s.oidc.Config().Issuer
+		cfg["client_id"] = s.oidc.Config().ClientID
+	}
+	s.json(w, http.StatusOK, cfg)
 }
 
 func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {

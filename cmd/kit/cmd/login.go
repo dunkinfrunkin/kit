@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/dunkinfrunkin/kit/internal/auth"
@@ -12,10 +14,8 @@ import (
 )
 
 var (
-	loginServer   string
-	loginSSO      bool
-	loginIssuer   string
-	loginClientID string
+	loginServer string
+	loginSSO    bool
 )
 
 var loginCmd = &cobra.Command{
@@ -23,19 +23,30 @@ var loginCmd = &cobra.Command{
 	Short: "Authenticate with a kit server",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if loginSSO {
-			issuer := loginIssuer
-			if issuer == "" {
-				issuer = os.Getenv("KIT_OIDC_ISSUER")
+			// Fetch OIDC config from the server
+			resp, err := http.Get(loginServer + "/auth/config")
+			if err != nil {
+				return fmt.Errorf("failed to reach server: %w", err)
 			}
-			clientID := loginClientID
-			if clientID == "" {
-				clientID = os.Getenv("KIT_OIDC_CLIENT_ID")
-			}
-			if issuer == "" || clientID == "" {
-				return fmt.Errorf("--issuer and --client-id (or KIT_OIDC_ISSUER and KIT_OIDC_CLIENT_ID env vars) are required for SSO login")
+			defer resp.Body.Close()
+
+			if resp.StatusCode != 200 {
+				return fmt.Errorf("SSO is not configured on this server")
 			}
 
-			token, email, err := auth.StartPKCEFlow(issuer, clientID)
+			var authCfg struct {
+				SSOEnabled bool   `json:"sso_enabled"`
+				Issuer     string `json:"issuer"`
+				ClientID   string `json:"client_id"`
+			}
+			if err := json.NewDecoder(resp.Body).Decode(&authCfg); err != nil {
+				return fmt.Errorf("invalid auth config from server: %w", err)
+			}
+			if !authCfg.SSOEnabled || authCfg.Issuer == "" || authCfg.ClientID == "" {
+				return fmt.Errorf("SSO is not configured on this server")
+			}
+
+			token, email, err := auth.StartPKCEFlow(authCfg.Issuer, authCfg.ClientID)
 			if err != nil {
 				return fmt.Errorf("SSO login failed: %w", err)
 			}
@@ -61,21 +72,21 @@ var loginCmd = &cobra.Command{
 		email := scanner.Text()
 
 		c := client.New(loginServer, "")
-		resp, err := c.Login(email)
+		loginResp, err := c.Login(email)
 		if err != nil {
 			return err
 		}
 
 		creds := &config.Credentials{
 			Server: loginServer,
-			Email:  resp.Email,
-			Token:  resp.Token,
+			Email:  loginResp.Email,
+			Token:  loginResp.Token,
 		}
 		if err := config.Save(creds); err != nil {
 			return err
 		}
 
-		fmt.Printf("Logged in as %s\n", resp.Email)
+		fmt.Printf("Logged in as %s\n", loginResp.Email)
 		return nil
 	},
 }
@@ -162,8 +173,6 @@ func init() {
 	loginCmd.Flags().StringVar(&loginServer, "server", "", "server URL")
 	loginCmd.MarkFlagRequired("server")
 	loginCmd.Flags().BoolVar(&loginSSO, "sso", false, "use SSO/OIDC authentication")
-	loginCmd.Flags().StringVar(&loginIssuer, "issuer", "", "OIDC issuer URL")
-	loginCmd.Flags().StringVar(&loginClientID, "client-id", "", "OIDC client ID")
 
 	tokenCmd.AddCommand(tokenCreateCmd)
 	tokenCmd.AddCommand(tokenListCmd)

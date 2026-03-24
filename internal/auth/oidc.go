@@ -33,6 +33,10 @@ type jwksCache struct {
 	fetched time.Time
 }
 
+func (v *OIDCVerifier) Config() OIDCConfig {
+	return v.config
+}
+
 type jwtHeader struct {
 	Alg string `json:"alg"`
 	Kid string `json:"kid"`
