@@ -105,6 +105,10 @@ func itemName(path string, itemType string) string {
 		return filepath.Base(path)
 	}
 	base := filepath.Base(path)
+	if strings.EqualFold(base, "SKILL.md") {
+		absPath, _ := filepath.Abs(path)
+		return filepath.Base(filepath.Dir(absPath))
+	}
 	ext := filepath.Ext(base)
 	return strings.TrimSuffix(base, ext)
 }
