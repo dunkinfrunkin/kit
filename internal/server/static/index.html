@@ -1239,7 +1239,10 @@ function renderSetup() {
       statusEl,
       h('div', { className: 'setup-steps' }, ...stepEls),
       h('div', { className: 'setup-divider' }),
-      h('div', { className: 'setup-step-title', style: 'margin-bottom: 4px' }, 'Already have a token?'),
+      ssoOk ? h('div', { className: 'setup-footer', style: 'margin-bottom: 20px' },
+        h('a', { className: 'btn-connect', href: '/auth/sso', style: 'display:inline-block;text-decoration:none;text-align:center' }, 'Sign in with SSO'),
+      ) : null,
+      h('div', { className: 'setup-step-title', style: 'margin-bottom: 4px' }, ssoOk ? 'Or paste a token' : 'Already have a token?'),
       h('div', { className: 'setup-step-desc' }, 'Paste it below to access the dashboard.'),
       h('div', { className: 'setup-token-input' }, icon('key'), tokenInput),
       h('div', { className: 'setup-footer' },
@@ -1254,9 +1257,13 @@ function renderLogin() {
   const input = h('input', { type: 'password', placeholder: 'Paste your token...' });
   const field = h('div', { className: 'login-field' }, icon('key'), input);
 
+  const ssoOk = state.authConfig && state.authConfig.sso_enabled;
+
   const card = h('div', { className: 'login-card' },
     h('div', { className: 'login-logo' }, 'kit'),
     h('div', { className: 'login-subtitle' }, 'Connect to your server'),
+    ssoOk ? h('a', { className: 'btn-connect', href: '/auth/sso', style: 'display:block;text-decoration:none;text-align:center;margin-bottom:16px' }, 'Sign in with SSO') : null,
+    ssoOk ? h('div', { style: 'text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:16px' }, 'or paste a token') : null,
     field,
     h('button', { className: 'btn-connect', onClick: () => login(input.value) }, 'Connect'),
     h('div', { className: 'login-help' },

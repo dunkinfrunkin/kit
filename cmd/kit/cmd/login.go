@@ -47,15 +47,22 @@ var loginCmd = &cobra.Command{
 				return fmt.Errorf("SSO is not configured on this server")
 			}
 
-			token, email, err := auth.StartPKCEFlow(authCfg.Issuer, authCfg.ClientID, authCfg.ClientSecret)
+			_, email, err := auth.StartPKCEFlow(authCfg.Issuer, authCfg.ClientID, authCfg.ClientSecret)
 			if err != nil {
 				return fmt.Errorf("SSO login failed: %w", err)
 			}
 
+			// Swap for a long-lived kit JWT
+			c := client.New(loginServer, "")
+			loginResp, err := c.Login(email)
+			if err != nil {
+				return fmt.Errorf("failed to get kit token: %w", err)
+			}
+
 			creds := &config.Credentials{
 				Server: loginServer,
-				Email:  email,
-				Token:  token,
+				Email:  loginResp.Email,
+				Token:  loginResp.Token,
 			}
 			if err := config.Save(creds); err != nil {
 				return err
