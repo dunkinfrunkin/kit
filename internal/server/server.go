@@ -65,10 +65,12 @@ func New(s *store.Store, secret string, oidc *auth.OIDCVerifier) *Server {
 
 	staticFS, _ := fs.Sub(staticFiles, "static")
 	indexHTML, _ := fs.ReadFile(staticFS, "index.html")
-	srv.mux.HandleFunc("GET /ui", func(w http.ResponseWriter, r *http.Request) {
+	serveUI := func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Write(indexHTML)
-	})
+	}
+	srv.mux.HandleFunc("GET /ui", serveUI)
+	srv.mux.HandleFunc("GET /{$}", serveUI)
 
 	srv.mux.HandleFunc("POST /login", srv.handleLogin)
 	srv.mux.HandleFunc("GET /auth/config", srv.handleAuthConfig)
