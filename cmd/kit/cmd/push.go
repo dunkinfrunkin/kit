@@ -83,6 +83,11 @@ func readAndDetect(path, forceType string) ([]byte, string, error) {
 		return content, forceType, nil
 	}
 
+	base := strings.ToLower(filepath.Base(path))
+	if base == "skill.md" {
+		return content, "skill", nil
+	}
+
 	ext := strings.ToLower(filepath.Ext(path))
 	switch ext {
 	case ".js":

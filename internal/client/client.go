@@ -67,9 +67,9 @@ func (c *Client) Login(email string) (*LoginResponse, error) {
 func (c *Client) ListItems(namespace, itemType string) ([]Item, error) {
 	var path string
 	if namespace == "" {
-		path = "/" + itemType
+		path = "/" + pluralize(itemType)
 	} else {
-		path = "/" + namespace + "/" + itemType
+		path = "/" + namespace + "/" + pluralize(itemType)
 	}
 	resp, err := c.do("GET", path, nil)
 	if err != nil {
@@ -84,7 +84,7 @@ func (c *Client) ListItems(namespace, itemType string) ([]Item, error) {
 }
 
 func (c *Client) GetItem(namespace, itemType, name string) (*Item, error) {
-	path := "/" + namespace + "/" + itemType + "/" + name
+	path := "/" + namespace + "/" + pluralize(itemType) + "/" + name
 	resp, err := c.do("GET", path, nil)
 	if err != nil {
 		return nil, err
@@ -98,7 +98,7 @@ func (c *Client) GetItem(namespace, itemType, name string) (*Item, error) {
 }
 
 func (c *Client) PushItem(namespace, itemType, name string, content []byte) error {
-	path := "/" + namespace + "/" + itemType
+	path := "/" + namespace + "/" + pluralize(itemType)
 	body := map[string]string{
 		"name":    name,
 		"content": base64.StdEncoding.EncodeToString(content),
@@ -112,7 +112,7 @@ func (c *Client) PushItem(namespace, itemType, name string, content []byte) erro
 }
 
 func (c *Client) DeleteItem(namespace, itemType, name string) error {
-	path := "/" + namespace + "/" + itemType + "/" + name
+	path := "/" + namespace + "/" + pluralize(itemType) + "/" + name
 	resp, err := c.do("DELETE", path, nil)
 	if err != nil {
 		return err
@@ -181,6 +181,10 @@ func (c *Client) AddProfileItem(namespace, profileName string, ref ProfileRef) e
 	}
 	resp.Body.Close()
 	return nil
+}
+
+func pluralize(itemType string) string {
+	return itemType + "s"
 }
 
 func (c *Client) do(method, path string, body interface{}) (*http.Response, error) {

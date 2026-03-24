@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #282c34;
+  --bg-sidebar: #21252b;
+  --bg-card: #2c313a;
+  --bg-hover: #353b45;
+  --bg-input: #1e2127;
+  --text: #abb2bf;
+  --text-bright: #d7dae0;
+  --text-muted: #636d83;
+  --blue: #61afef;
+  --green: #98c379;
+  --yellow: #e5c07b;
+  --purple: #c678dd;
+  --red: #e06c75;
+  --border: #3e4452;
+  --radius: 6px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+}
+code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
+
+/* Navbar */
+.navbar {
+  display: flex;
+  align-items: center;
+  height: 48px;
+  padding: 0 16px;
+  background: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+  z-index: 10;
+}
+.navbar .logo {
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--blue);
+  letter-spacing: -0.5px;
+}
+.navbar .spacer { flex: 1; }
+.navbar .server-info {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.navbar .user-email {
+  font-size: 12px;
+  color: var(--text);
+  background: var(--bg-card);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  display: inline-block;
+}
+.status-dot.error { background: var(--red); }
+.btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn:hover { opacity: 0.85; }
+.btn-primary { background: var(--blue); color: #fff; }
+.btn-danger { background: var(--red); color: #fff; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+
+/* Layout */
+.app { display: flex; height: calc(100vh - 48px); }
+.sidebar {
+  width: 240px;
+  min-width: 240px;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 12px 0;
+}
+.main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+/* Sidebar */
+.sidebar-section { margin-bottom: 8px; }
+.sidebar-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  padding: 8px 16px 4px;
+}
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.1s;
+  color: var(--text);
+}
+.sidebar-item:hover { background: var(--bg-hover); }
+.sidebar-item.active { background: var(--bg-hover); color: var(--text-bright); }
+.sidebar-item .icon { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
+.sidebar-item .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar-item .badge {
+  font-size: 11px;
+  background: var(--bg);
+  color: var(--text-muted);
+  padding: 1px 6px;
+  border-radius: 10px;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* Content header */
+.content-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.content-header h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-bright);
+}
+.search-input {
+  margin-left: auto;
+  padding: 7px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  width: 260px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.search-input:focus { border-color: var(--blue); }
+.search-input::placeholder { color: var(--text-muted); }
+
+/* Table */
+.items-table { width: 100%; border-collapse: collapse; }
+.items-table th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.items-table td {
+  padding: 10px 12px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.items-table tr.item-row { cursor: pointer; transition: background 0.1s; }
+.items-table tr.item-row:hover { background: var(--bg-hover); }
+.type-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.type-badge.skill { background: rgba(152,195,121,0.15); color: var(--green); }
+.type-badge.hook  { background: rgba(229,192,123,0.15); color: var(--yellow); }
+.type-badge.config { background: rgba(97,175,239,0.15); color: var(--blue); }
+
+/* Expanded content */
+.item-detail td {
+  padding: 0 12px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.item-detail pre {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-x: auto;
+  max-height: 400px;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Login card */
+.login-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: var(--bg);
+}
+.login-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 36px;
+  width: 380px;
+  text-align: center;
+}
+.login-card h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--blue);
+  margin-bottom: 8px;
+}
+.login-card p { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
+.login-card code {
+  background: var(--bg-input);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--yellow);
+}
+.login-card input {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  margin-bottom: 14px;
+  outline: none;
+}
+.login-card input:focus { border-color: var(--blue); }
+.login-card .btn { width: 100%; padding: 10px; font-size: 14px; }
+
+/* Spinner */
+.spinner {
+  display: inline-block;
+  width: 20px; height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* Error banner */
+.error-banner {
+  background: rgba(224,108,117,0.12);
+  border: 1px solid var(--red);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  color: var(--red);
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.empty-state code {
+  background: var(--bg-input);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--yellow);
+}
+
+/* Transitions */
+.fade-in { animation: fadeIn 0.15s ease-in; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const $ = (sel, ctx = document) => ctx.querySelector(sel);
+const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
+const h = (tag, attrs = {}, ...children) => {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k.startsWith('on')) el.addEventListener(k.slice(2).toLowerCase(), v);
+    else if (k === 'className') el.className = v;
+    else if (k === 'htmlFor') el.setAttribute('for', v);
+    else el.setAttribute(k, v);
+  }
+  for (const c of children.flat()) {
+    if (c == null) continue;
+    el.append(typeof c === 'string' ? document.createTextNode(c) : c);
+  }
+  return el;
+};
+
+const state = {
+  token: localStorage.getItem('kit_token') || '',
+  namespaces: [],
+  items: [],
+  selected: null,
+  expanded: null,
+  expandedContent: null,
+  loading: false,
+  error: null,
+  searchQuery: '',
+  email: '',
+};
+
+const baseUrl = window.location.origin;
+
+function decodeJwtEmail(token) {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return '';
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return payload.email || payload.sub || '';
+  } catch { return ''; }
+}
+
+async function apiFetch(path) {
+  const res = await fetch(path, {
+    headers: { 'Authorization': 'Bearer ' + state.token },
+  });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  return res.json();
+}
+
+async function loadNamespaces() {
+  state.loading = true;
+  state.error = null;
+  render();
+  try {
+    const [skills, hooks, configs] = await Promise.all([
+      apiFetch('/skills').catch(() => []),
+      apiFetch('/hooks').catch(() => []),
+      apiFetch('/configs').catch(() => []),
+    ]);
+    const nsMap = {};
+    const add = (list, type) => {
+      if (!Array.isArray(list)) return;
+      for (const item of list) {
+        const ns = item.namespace || item.Namespace;
+        if (!ns) continue;
+        if (!nsMap[ns]) nsMap[ns] = { name: ns, count: 0 };
+        nsMap[ns].count++;
+      }
+    };
+    add(skills, 'skill');
+    add(hooks, 'hook');
+    add(configs, 'config');
+    state.namespaces = Object.values(nsMap).sort((a, b) => a.name.localeCompare(b.name));
+    state.allItems = buildAllItems(skills, hooks, configs);
+    state.selected = null;
+    state.items = state.allItems;
+    state.loading = false;
+    state.email = decodeJwtEmail(state.token);
+    render();
+  } catch (e) {
+    state.loading = false;
+    state.error = 'Failed to load data: ' + e.message;
+    render();
+  }
+}
+
+function buildAllItems(skills, hooks, configs) {
+  const items = [];
+  const push = (list, type) => {
+    if (!Array.isArray(list)) return;
+    for (const it of list) {
+      items.push({
+        type,
+        name: it.name || it.Name || '',
+        namespace: it.namespace || it.Namespace || '',
+        author: it.author || it.Author || '',
+        version: it.version || it.Version || '',
+        updated: it.updated_at || it.UpdatedAt || it.updated || '',
+      });
+    }
+  };
+  push(skills, 'skill');
+  push(hooks, 'hook');
+  push(configs, 'config');
+  return items;
+}
+
+async function selectNamespace(ns) {
+  state.selected = ns;
+  state.expanded = null;
+  state.expandedContent = null;
+  state.searchQuery = '';
+  if (!ns) {
+    state.items = state.allItems || [];
+    render();
+    return;
+  }
+  state.loading = true;
+  state.error = null;
+  render();
+  try {
+    const [skills, hooks, configs] = await Promise.all([
+      apiFetch('/' + encodeURIComponent(ns) + '/skills').catch(() => []),
+      apiFetch('/' + encodeURIComponent(ns) + '/hooks').catch(() => []),
+      apiFetch('/' + encodeURIComponent(ns) + '/configs').catch(() => []),
+    ]);
+    state.items = buildAllItems(
+      (Array.isArray(skills) ? skills : []).map(s => ({ ...s, namespace: ns })),
+      (Array.isArray(hooks) ? hooks : []).map(s => ({ ...s, namespace: ns })),
+      (Array.isArray(configs) ? configs : []).map(s => ({ ...s, namespace: ns })),
+    );
+    state.loading = false;
+    render();
+  } catch (e) {
+    state.loading = false;
+    state.error = 'Failed to load namespace: ' + e.message;
+    render();
+  }
+}
+
+async function toggleExpand(item) {
+  const key = item.namespace + '/' + item.type + '/' + item.name;
+  if (state.expanded === key) {
+    state.expanded = null;
+    state.expandedContent = null;
+    render();
+    return;
+  }
+  state.expanded = key;
+  state.expandedContent = null;
+  render();
+  try {
+    const data = await apiFetch(
+      '/' + encodeURIComponent(item.namespace) + '/' + item.type + 's/' + encodeURIComponent(item.name)
+    );
+    const content = data.content || data.Content || '';
+    try {
+      state.expandedContent = atob(content);
+    } catch {
+      state.expandedContent = typeof content === 'string' ? content : JSON.stringify(data, null, 2);
+    }
+  } catch (e) {
+    state.expandedContent = 'Error loading content: ' + e.message;
+  }
+  render();
+}
+
+let searchTimeout;
+async function doSearch(query) {
+  state.searchQuery = query;
+  if (!query.trim()) {
+    state.selected ? selectNamespace(state.selected) : selectNamespace(null);
+    return;
+  }
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(async () => {
+    state.loading = true;
+    state.error = null;
+    render();
+    try {
+      const results = await apiFetch('/search?q=' + encodeURIComponent(query));
+      state.items = buildAllItems(
+        (results.skills || []),
+        (results.hooks || []),
+        (results.configs || []),
+      );
+      if (Array.isArray(results)) state.items = buildAllItems(results, [], []);
+      state.loading = false;
+      render();
+    } catch (e) {
+      state.loading = false;
+      state.error = 'Search failed: ' + e.message;
+      render();
+    }
+  }, 300);
+}
+
+function formatDate(d) {
+  if (!d) return '-';
+  try {
+    const dt = new Date(d);
+    if (isNaN(dt)) return d;
+    return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch { return d; }
+}
+
+function login(token) {
+  state.token = token.trim();
+  localStorage.setItem('kit_token', state.token);
+  loadNamespaces();
+}
+
+function logout() {
+  state.token = '';
+  state.namespaces = [];
+  state.items = [];
+  state.allItems = [];
+  state.email = '';
+  localStorage.removeItem('kit_token');
+  render();
+}
+
+function renderLogin() {
+  const input = h('input', { type: 'password', placeholder: 'Paste your token...' });
+  const card = h('div', { className: 'login-card' },
+    h('h1', {}, 'kit'),
+    h('p', {}, 'Enter your token to connect. Run ', h('code', {}, 'kit login'),
+      ' and find your token in ', h('code', {}, '~/.kit/credentials'), '.'),
+    input,
+    h('button', { className: 'btn btn-primary', onClick: () => login(input.value) }, 'Connect'),
+  );
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') login(input.value); });
+  return h('div', { className: 'login-overlay' }, card);
+}
+
+function renderNavbar() {
+  return h('nav', { className: 'navbar' },
+    h('span', { className: 'logo' }, 'kit'),
+    h('span', { className: 'status-dot' + (state.error ? ' error' : '') }),
+    h('span', { className: 'server-info' }, baseUrl),
+    h('span', { className: 'spacer' }),
+    state.email ? h('span', { className: 'user-email' }, state.email) : null,
+    h('button', { className: 'btn btn-danger btn-sm', onClick: logout }, 'Logout'),
+  );
+}
+
+function renderSidebar() {
+  const teams = state.namespaces.filter(n => !n.name.startsWith('@'));
+  const personal = state.namespaces.filter(n => n.name.startsWith('@'));
+
+  const mkItem = (ns) => h('div', {
+    className: 'sidebar-item' + (state.selected === ns.name ? ' active' : ''),
+    onClick: () => selectNamespace(ns.name),
+  },
+    h('span', { className: 'icon' }, ns.name.startsWith('@') ? '\uD83D\uDD12' : '\uD83D\uDCC1'),
+    h('span', { className: 'name' }, ns.name),
+    h('span', { className: 'badge' }, String(ns.count)),
+  );
+
+  const allCount = state.namespaces.reduce((s, n) => s + n.count, 0);
+  return h('aside', { className: 'sidebar' },
+    h('div', { className: 'sidebar-item' + (state.selected === null ? ' active' : ''), onClick: () => selectNamespace(null) },
+      h('span', { className: 'icon' }, '\u2302'),
+      h('span', { className: 'name' }, 'All'),
+      h('span', { className: 'badge' }, String(allCount)),
+    ),
+    teams.length ? h('div', { className: 'sidebar-section' },
+      h('div', { className: 'sidebar-section-title' }, 'Teams'),
+      ...teams.map(mkItem),
+    ) : null,
+    personal.length ? h('div', { className: 'sidebar-section' },
+      h('div', { className: 'sidebar-section-title' }, 'Personal'),
+      ...personal.map(mkItem),
+    ) : null,
+  );
+}
+
+function renderMain() {
+  const header = h('div', { className: 'content-header' },
+    h('h2', {}, state.selected || 'All Items'),
+    h('input', {
+      className: 'search-input',
+      type: 'text',
+      placeholder: 'Search items...',
+      value: state.searchQuery,
+      onInput: (e) => doSearch(e.target.value),
+    }),
+  );
+
+  if (state.loading) {
+    return h('div', { className: 'main' }, header,
+      h('div', { className: 'loading-wrap' }, h('div', { className: 'spinner' }), 'Loading...'));
+  }
+
+  if (state.error) {
+    return h('div', { className: 'main' }, header, h('div', { className: 'error-banner' }, state.error));
+  }
+
+  if (!state.items.length && !state.namespaces.length) {
+    return h('div', { className: 'main' }, header,
+      h('div', { className: 'empty-state' }, 'No items on this server yet.'));
+  }
+
+  if (!state.items.length) {
+    return h('div', { className: 'main' }, header,
+      h('div', { className: 'empty-state' },
+        'No items in this namespace yet. Push something with ', h('code', {}, 'kit push'), '.'));
+  }
+
+  const rows = [];
+  for (const item of state.items) {
+    const key = item.namespace + '/' + item.type + '/' + item.name;
+    const isExpanded = state.expanded === key;
+    rows.push(h('tr', { className: 'item-row', onClick: () => toggleExpand(item) },
+      h('td', {}, h('span', { className: 'type-badge ' + item.type }, item.type)),
+      h('td', { className: 'mono', style: 'color:var(--text-bright)' }, item.name),
+      h('td', {}, item.namespace),
+      h('td', {}, item.author || '-'),
+      h('td', {}, item.version || '-'),
+      h('td', {}, formatDate(item.updated)),
+    ));
+    if (isExpanded) {
+      const content = state.expandedContent === null
+        ? h('div', { className: 'loading-wrap' }, h('div', { className: 'spinner' }), 'Loading content...')
+        : h('pre', {}, state.expandedContent);
+      rows.push(h('tr', { className: 'item-detail' },
+        h('td', { colspan: '6' }, content)));
+    }
+  }
+
+  const table = h('table', { className: 'items-table' },
+    h('thead', {},
+      h('tr', {},
+        h('th', {}, 'Type'),
+        h('th', {}, 'Name'),
+        h('th', {}, 'Namespace'),
+        h('th', {}, 'Author'),
+        h('th', {}, 'Version'),
+        h('th', {}, 'Updated'),
+      ),
+    ),
+    h('tbody', {}, ...rows),
+  );
+
+  return h('div', { className: 'main fade-in' }, header, table);
+}
+
+function render() {
+  const app = $('#app');
+  app.innerHTML = '';
+  if (!state.token) {
+    app.append(renderLogin());
+    return;
+  }
+  app.append(renderNavbar());
+  const layout = h('div', { className: 'app' }, renderSidebar(), renderMain());
+  app.append(layout);
+}
+
+// Boot
+render();
+if (state.token) loadNamespaces();
+</script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # Binaries
-kit
-kitd
+/kit
+/kitd
 bin/
 dist/
 *.exe

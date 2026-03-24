@@ -1,8 +1,10 @@
 package server
 
 import (
+	"embed"
 	"encoding/base64"
 	"encoding/json"
+	"io/fs"
 	"net/http"
 	"strings"
 	"time"
@@ -11,6 +13,9 @@ import (
 	"github.com/dunkinfrunkin/kit/internal/crypto"
 	"github.com/dunkinfrunkin/kit/internal/store"
 )
+
+//go:embed static
+var staticFiles embed.FS
 
 type itemResponse struct {
 	ID        int       `json:"id"`
@@ -50,6 +55,16 @@ func New(s *store.Store, secret string) *Server {
 		secret: secret,
 		mux:    http.NewServeMux(),
 	}
+
+	staticFS, _ := fs.Sub(staticFiles, "static")
+	srv.mux.Handle("GET /ui", http.StripPrefix("/ui", http.FileServer(http.FS(staticFS))))
+	srv.mux.Handle("GET /ui/", http.StripPrefix("/ui/", http.FileServer(http.FS(staticFS))))
+	srv.mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" {
+			http.Redirect(w, r, "/ui", http.StatusFound)
+			return
+		}
+	})
 
 	srv.mux.HandleFunc("POST /login", srv.handleLogin)
 
