@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 type Client struct {
@@ -166,6 +167,52 @@ func (c *Client) ListProfiles(namespace string) ([]Profile, error) {
 func (c *Client) CreateProfile(namespace, name string) error {
 	path := "/" + namespace + "/profiles"
 	resp, err := c.do("POST", path, map[string]string{"name": name})
+	if err != nil {
+		return err
+	}
+	resp.Body.Close()
+	return nil
+}
+
+type TokenResponse struct {
+	Token string `json:"token"`
+	Name  string `json:"name"`
+}
+
+type TokenListEntry struct {
+	Name      string    `json:"name"`
+	Prefix    string    `json:"prefix"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+func (c *Client) CreateToken(name string) (*TokenResponse, error) {
+	resp, err := c.do("POST", "/tokens", map[string]string{"name": name})
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	var tr TokenResponse
+	if err := json.NewDecoder(resp.Body).Decode(&tr); err != nil {
+		return nil, err
+	}
+	return &tr, nil
+}
+
+func (c *Client) ListTokens() ([]TokenListEntry, error) {
+	resp, err := c.do("GET", "/tokens", nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	var tokens []TokenListEntry
+	if err := json.NewDecoder(resp.Body).Decode(&tokens); err != nil {
+		return nil, err
+	}
+	return tokens, nil
+}
+
+func (c *Client) DeleteToken(name string) error {
+	resp, err := c.do("DELETE", "/tokens/"+name, nil)
 	if err != nil {
 		return err
 	}

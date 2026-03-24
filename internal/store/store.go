@@ -37,6 +37,12 @@ type ProfileRef struct {
 	Type string `json:"type"`
 }
 
+type APITokenRow struct {
+	Name      string    `json:"name"`
+	Prefix    string    `json:"prefix"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
 type Store struct {
 	db *sql.DB
 }
@@ -86,6 +92,15 @@ func (s *Store) Migrate() error {
 			created_at TIMESTAMPTZ DEFAULT NOW(),
 			updated_at TIMESTAMPTZ DEFAULT NOW(),
 			UNIQUE(namespace, name)
+		);
+
+		CREATE TABLE IF NOT EXISTS api_tokens (
+			id         SERIAL PRIMARY KEY,
+			email      TEXT NOT NULL,
+			name       TEXT NOT NULL,
+			token_hash TEXT NOT NULL,
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			UNIQUE(email, name)
 		);
 	`)
 	return err
@@ -326,6 +341,77 @@ func (s *Store) AddProfileItem(namespace, profileName string, ref ProfileRef) er
 		return fmt.Errorf("updating profile items: %w", err)
 	}
 	return nil
+}
+
+func (s *Store) CreateAPIToken(email, name, tokenHash string) error {
+	_, err := s.db.Exec(`
+		INSERT INTO api_tokens (email, name, token_hash)
+		VALUES ($1, $2, $3)
+	`, email, name, tokenHash)
+	if err != nil {
+		return fmt.Errorf("creating api token: %w", err)
+	}
+	return nil
+}
+
+func (s *Store) ListAPITokens(email string) ([]APITokenRow, error) {
+	rows, err := s.db.Query(`
+		SELECT name, token_hash, created_at
+		FROM api_tokens
+		WHERE email = $1
+		ORDER BY created_at
+	`, email)
+	if err != nil {
+		return nil, fmt.Errorf("listing api tokens: %w", err)
+	}
+	defer rows.Close()
+
+	var tokens []APITokenRow
+	for rows.Next() {
+		var row APITokenRow
+		var hash string
+		if err := rows.Scan(&row.Name, &hash, &row.CreatedAt); err != nil {
+			return nil, fmt.Errorf("scanning api token: %w", err)
+		}
+		if len(hash) >= 4 {
+			row.Prefix = hash[len(hash)-4:]
+		} else {
+			row.Prefix = hash
+		}
+		tokens = append(tokens, row)
+	}
+	return tokens, rows.Err()
+}
+
+func (s *Store) DeleteAPIToken(email, name string) error {
+	result, err := s.db.Exec(`
+		DELETE FROM api_tokens WHERE email = $1 AND name = $2
+	`, email, name)
+	if err != nil {
+		return fmt.Errorf("deleting api token: %w", err)
+	}
+	n, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("checking rows affected: %w", err)
+	}
+	if n == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (s *Store) GetAPITokenEmail(tokenHash string) (string, error) {
+	var email string
+	err := s.db.QueryRow(`
+		SELECT email FROM api_tokens WHERE token_hash = $1
+	`, tokenHash).Scan(&email)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", ErrNotFound
+	}
+	if err != nil {
+		return "", fmt.Errorf("looking up api token: %w", err)
+	}
+	return email, nil
 }
 
 func scanItems(rows *sql.Rows) ([]Item, error) {

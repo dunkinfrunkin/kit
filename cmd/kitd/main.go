@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/dunkinfrunkin/kit/internal/auth"
 	"github.com/dunkinfrunkin/kit/internal/server"
 	"github.com/dunkinfrunkin/kit/internal/store"
 )
@@ -37,9 +38,24 @@ func main() {
 		log.Fatalf("migration failed: %v", err)
 	}
 
+	var oidc *auth.OIDCVerifier
+	oidcIssuer := os.Getenv("KIT_OIDC_ISSUER")
+	oidcClientID := os.Getenv("KIT_OIDC_CLIENT_ID")
+	if oidcIssuer != "" && oidcClientID != "" {
+		var err error
+		oidc, err = auth.NewOIDCVerifier(auth.OIDCConfig{
+			Issuer:   oidcIssuer,
+			ClientID: oidcClientID,
+		})
+		if err != nil {
+			log.Fatalf("OIDC setup failed: %v", err)
+		}
+		log.Printf("OIDC enabled (issuer: %s)", oidcIssuer)
+	}
+
 	srv := &http.Server{
 		Addr:    ":" + port,
-		Handler: server.New(st, secret),
+		Handler: server.New(st, secret, oidc),
 	}
 
 	done := make(chan os.Signal, 1)
