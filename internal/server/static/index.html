@@ -390,6 +390,19 @@ code, pre, .mono { font-family: var(--font-mono); }
 }
 
 /* ---------- Expanded Card Content ---------- */
+.detail-content {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px 28px;
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-x: auto;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  tab-size: 2;
+}
 .card-expand-content {
   margin-top: 16px;
   padding-top: 16px;
@@ -945,6 +958,7 @@ const state = {
   searchQuery: '',
   email: '',
   drawerOpen: false,
+  viewingItem: null,
   setupMode: false,
   authConfig: null,
 };
@@ -1346,16 +1360,10 @@ function renderSkeleton() {
 
 /* ---------- Render: Card ---------- */
 function renderCard(item, index) {
-  const key = item.namespace + '/' + item.type + '/' + item.name;
-  const isExpanded = state.expanded === key;
-
   const card = h('div', {
-    className: 'item-card' + (isExpanded ? ' expanded' : ''),
+    className: 'item-card',
     style: `animation-delay:${index * 40}ms`,
-    onClick: (e) => {
-      if (isExpanded && (e.target.closest('.card-expand-content') || e.target.closest('.btn-close-expand'))) return;
-      if (!isExpanded) toggleExpand(item);
-    },
+    onClick: () => openItemDetail(item),
   },
     h('div', { className: 'card-top' },
       h('span', { className: 'type-badge ' + item.type }, item.type),
@@ -1367,48 +1375,74 @@ function renderCard(item, index) {
       item.version ? h('span', { className: 'card-meta-item' }, icon('check', 14), h('span', { className: 'version-badge' }, item.version)) : null,
       item.updated ? h('span', { className: 'card-meta-item' }, icon('clock', 14), relativeTime(item.updated)) : null,
     ),
-    isExpanded ? renderExpandedContent(item) : null,
   );
-
   return card;
 }
 
-function renderExpandedContent(item) {
+async function openItemDetail(item) {
+  state.viewingItem = item;
+  state.expandedContent = null;
+  render();
+  try {
+    const data = await apiFetch(
+      '/' + encodeURIComponent(item.namespace) + '/' + item.type + 's/' + encodeURIComponent(item.name)
+    );
+    const content = data.content || data.Content || '';
+    try { state.expandedContent = atob(content); }
+    catch { state.expandedContent = typeof content === 'string' ? content : JSON.stringify(data, null, 2); }
+  } catch (e) {
+    state.expandedContent = 'Error loading content: ' + e.message;
+  }
+  render();
+}
+
+function renderItemDetail() {
+  const item = state.viewingItem;
+
+  const backBtn = h('button', { className: 'btn-ghost', style: 'margin-bottom:20px;gap:6px', onClick: () => {
+    state.viewingItem = null;
+    state.expandedContent = null;
+    render();
+  }},
+    (() => { const s = document.createElement('span'); s.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>'; return s; })(),
+    'Back',
+  );
+
+  const header = h('div', { style: 'margin-bottom:24px' },
+    h('div', { className: 'card-top', style: 'margin-bottom:12px' },
+      h('span', { className: 'type-badge ' + item.type }, item.type),
+      h('span', { className: 'ns-badge' }, item.namespace),
+    ),
+    h('h2', { style: 'font-size:24px;font-weight:700;color:var(--text-primary);margin-bottom:8px' }, item.name),
+    h('div', { className: 'card-meta' },
+      item.author ? h('span', { className: 'card-meta-item' }, icon('user', 14), item.author) : null,
+      item.version ? h('span', { className: 'card-meta-item' }, icon('check', 14), h('span', { className: 'version-badge' }, item.version)) : null,
+      item.updated ? h('span', { className: 'card-meta-item' }, icon('clock', 14), relativeTime(item.updated)) : null,
+    ),
+  );
+
   let body;
   if (state.expandedContent === null) {
-    // Loading skeleton for content
-    body = h('div', { style: 'padding:16px 0' },
+    body = h('div', { style: 'padding:24px 0' },
       h('div', { className: 'skeleton-line w70', style: 'animation: skeleton-pulse 1.5s ease-in-out infinite' }),
       h('div', { className: 'skeleton-line w55', style: 'animation: skeleton-pulse 1.5s ease-in-out infinite; animation-delay:100ms' }),
       h('div', { className: 'skeleton-line w40', style: 'animation: skeleton-pulse 1.5s ease-in-out infinite; animation-delay:200ms' }),
     );
   } else {
-    const pre = h('pre', {});
+    const pre = h('pre', { className: 'detail-content' });
     pre.innerHTML = highlightSyntax(state.expandedContent);
     body = pre;
   }
 
-  const closeBtn = h('button', { className: 'btn-close-expand', onClick: (e) => {
-    e.stopPropagation();
-    state.expanded = null;
-    state.expandedContent = null;
-    render();
-  }},
-    (() => { const s = document.createElement('span'); s.innerHTML = icons.x; return s; })(),
-    'Close',
-  );
-
-  return h('div', { className: 'card-expand-content' },
-    h('div', { className: 'card-expand-header' },
-      h('span', { className: 'card-expand-title' }, 'Content'),
-      closeBtn,
-    ),
-    body,
-  );
+  return h('div', { className: 'main-content fade-in' }, backBtn, header, body);
 }
 
 /* ---------- Render: Main Content ---------- */
 function renderMain() {
+  if (state.viewingItem) {
+    return renderItemDetail();
+  }
+
   const title = state.selected || 'All Items';
   const count = state.items.length;
   const subtitle = state.loading ? 'Loading...' : (count + ' item' + (count !== 1 ? 's' : ''));
@@ -1468,10 +1502,11 @@ function render() {
 
 /* ---------- Keyboard Shortcuts ---------- */
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && state.expanded) {
-    state.expanded = null;
+  if (e.key === 'Escape' && state.viewingItem) {
+    state.viewingItem = null;
     state.expandedContent = null;
     render();
+    return;
   }
   if (e.key === 'Escape' && state.drawerOpen) {
     state.drawerOpen = false;
