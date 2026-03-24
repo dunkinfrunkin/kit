@@ -1176,9 +1176,6 @@ function renderSetup() {
   const ssoOk = cfg.sso_enabled === true;
   const serverUrl = baseUrl;
 
-  const tokenInput = h('input', { type: 'password', placeholder: 'Paste your token...' });
-  tokenInput.addEventListener('keydown', e => { if (e.key === 'Enter') login(tokenInput.value); });
-
   const steps = [
     {
       num: '1', done: true,
@@ -1225,30 +1222,24 @@ function renderSetup() {
       statusEl,
       h('div', { className: 'setup-steps' }, ...stepEls),
       h('div', { className: 'setup-divider' }),
-      h('div', { className: 'setup-step-title', style: 'margin-bottom: 4px' }, 'Already have a token?'),
-      h('div', { className: 'setup-step-desc' }, 'Paste it below to access the dashboard.'),
-      h('div', { className: 'setup-token-input' }, icon('key'), tokenInput),
-      h('div', { className: 'setup-footer' },
-        h('button', { className: 'btn-connect', onClick: () => login(tokenInput.value) }, 'Connect'),
-      ),
+      ssoOk ? h('div', { className: 'setup-footer' },
+        h('a', { className: 'btn-connect', href: '/auth/sso', style: 'display:inline-block;text-decoration:none;text-align:center;padding:12px 40px;font-size:15px' }, 'Sign in with SSO'),
+      ) : h('div', { className: 'setup-step-desc', style: 'text-align:center' }, 'Configure SSO to enable sign-in.'),
     ),
   );
 }
 
 /* ---------- Render: Login ---------- */
 function renderLogin() {
-  const input = h('input', { type: 'password', placeholder: 'Paste your token...' });
-  const field = h('div', { className: 'login-field' }, icon('key'), input);
+  const ssoOk = state.authConfig && state.authConfig.sso_enabled;
 
   const card = h('div', { className: 'login-card' },
     h('div', { className: 'login-logo' }, 'kit'),
-    h('div', { className: 'login-subtitle' }, 'Connect to your server'),
-    field,
-    h('button', { className: 'btn-connect', onClick: () => login(input.value) }, 'Connect'),
-    h('div', { className: 'login-help' },
-      'Run ', h('code', {}, 'kit login'), ' to authenticate, or paste a token from ', h('code', {}, '~/.kit/credentials'), '.'),
+    h('div', { className: 'login-subtitle' }, 'Sign in to your server'),
+    ssoOk
+      ? h('a', { className: 'btn-connect', href: '/auth/sso', style: 'display:block;text-decoration:none;text-align:center;padding:12px;font-size:15px' }, 'Sign in with SSO')
+      : h('div', { className: 'login-help' }, 'SSO is not configured. Contact your admin.'),
   );
-  input.addEventListener('keydown', e => { if (e.key === 'Enter') login(input.value); });
 
   return h('div', { className: 'login-overlay' },
     h('div', { className: 'login-glow' }),
