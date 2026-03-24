@@ -643,6 +643,166 @@ code, pre, .mono { font-family: var(--font-mono); }
   font-family: var(--font-mono);
 }
 
+/* ---------- Setup Wizard ---------- */
+.setup-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+}
+.setup-glow {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(34,197,94,0.05) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.setup-card {
+  position: relative;
+  background: rgba(20,20,22,0.8);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 48px 44px;
+  width: 520px;
+  max-width: 95vw;
+  animation: login-enter 0.4s ease;
+}
+.setup-header {
+  text-align: center;
+  margin-bottom: 36px;
+}
+.setup-header .login-logo { margin-bottom: 8px; }
+.setup-header p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.setup-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.setup-step {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.setup-step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.setup-step-num.done {
+  background: var(--accent);
+  color: #fff;
+}
+.setup-step-body { flex: 1; min-width: 0; }
+.setup-step-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.setup-step-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.setup-code {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-primary);
+  margin-top: 8px;
+  overflow-x: auto;
+  white-space: pre;
+  line-height: 1.6;
+}
+.setup-code .dim { color: var(--text-muted); }
+.setup-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 24px 0;
+}
+.setup-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+.setup-status.ok {
+  background: rgba(34,197,94,0.08);
+  color: var(--accent);
+  border: 1px solid rgba(34,197,94,0.15);
+}
+.setup-status.warn {
+  background: rgba(245,158,11,0.08);
+  color: #f59e0b;
+  border: 1px solid rgba(245,158,11,0.15);
+}
+.setup-status .status-icon {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.setup-status.ok .status-icon { background: var(--accent); }
+.setup-status.warn .status-icon { background: #f59e0b; }
+.setup-footer {
+  text-align: center;
+  margin-top: 28px;
+}
+.setup-footer .btn-connect { width: auto; padding: 10px 32px; }
+.setup-token-input {
+  margin-top: 16px;
+}
+.setup-token-input input {
+  width: 100%;
+  padding: 10px 12px;
+  padding-left: 36px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  outline: none;
+  transition: border-color var(--transition);
+}
+.setup-token-input input:focus { border-color: var(--accent); }
+.setup-token-input { position: relative; }
+.setup-token-input svg {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+}
+
 /* ---------- Mobile Drawer ---------- */
 .sidebar-backdrop {
   display: none;
@@ -783,6 +943,8 @@ const state = {
   searchQuery: '',
   email: '',
   drawerOpen: false,
+  setupMode: false,
+  authConfig: null,
 };
 
 const baseUrl = window.location.origin;
@@ -1008,6 +1170,85 @@ function logout() {
   render();
 }
 
+/* ---------- Render: Setup Wizard ---------- */
+function renderSetup() {
+  const cfg = state.authConfig || {};
+  const ssoOk = cfg.sso_enabled === true;
+  const serverUrl = baseUrl;
+
+  const tokenInput = h('input', { type: 'password', placeholder: 'Paste your token...' });
+  tokenInput.addEventListener('keydown', e => { if (e.key === 'Enter') login(tokenInput.value); });
+
+  const steps = [
+    {
+      num: '1', done: true,
+      title: 'Server is running',
+      desc: 'Your kit server is up and accepting connections.',
+    },
+    {
+      num: '2', done: ssoOk,
+      title: 'Configure authentication',
+      desc: ssoOk
+        ? 'SSO is configured via ' + cfg.issuer
+        : 'Set environment variables to enable SSO, or use the built-in email auth.',
+      code: ssoOk ? null : 'KIT_OIDC_ISSUER=https://yourcompany.okta.com/oauth2/default\nKIT_OIDC_CLIENT_ID=your-client-id',
+    },
+    {
+      num: '3', done: false,
+      title: 'Connect from the CLI',
+      desc: 'Install the CLI and authenticate with your server.',
+      code: ssoOk
+        ? 'brew install dunkinfrunkin/tap/kit\nkit login --server ' + serverUrl + ' --sso'
+        : 'brew install dunkinfrunkin/tap/kit\nkit login --server ' + serverUrl,
+    },
+    {
+      num: '4', done: false,
+      title: 'Push your first item',
+      desc: 'Share a skill, hook, or config with your team.',
+      code: 'kit push ./my-skill/ --team backend\nkit push ./conventions.md --team backend',
+    },
+  ];
+
+  const stepEls = steps.map(s => {
+    const body = [
+      h('div', { className: 'setup-step-title' }, s.title),
+      h('div', { className: 'setup-step-desc' }, s.desc),
+    ];
+    if (s.code) {
+      body.push(h('div', { className: 'setup-code' }, s.code));
+    }
+    return h('div', { className: 'setup-step' },
+      h('div', { className: 'setup-step-num' + (s.done ? ' done' : '') }, s.done ? '\u2713' : s.num),
+      h('div', { className: 'setup-step-body' }, ...body),
+    );
+  });
+
+  const statusEl = h('div', { className: 'setup-status ' + (ssoOk ? 'ok' : 'warn') },
+    h('div', { className: 'status-icon' }),
+    ssoOk ? 'SSO enabled — users can log in with their corporate identity'
+           : 'Using built-in auth — set OIDC env vars for enterprise SSO',
+  );
+
+  return h('div', { className: 'setup-overlay' },
+    h('div', { className: 'setup-glow' }),
+    h('div', { className: 'setup-card' },
+      h('div', { className: 'setup-header' },
+        h('div', { className: 'login-logo' }, 'kit'),
+        h('p', {}, 'Welcome to your kit server. Get set up in a few steps.'),
+      ),
+      statusEl,
+      h('div', { className: 'setup-steps' }, ...stepEls),
+      h('div', { className: 'setup-divider' }),
+      h('div', { className: 'setup-step-title', style: 'margin-bottom: 4px' }, 'Already have a token?'),
+      h('div', { className: 'setup-step-desc' }, 'Paste it below to access the dashboard.'),
+      h('div', { className: 'setup-token-input' }, icon('key'), tokenInput),
+      h('div', { className: 'setup-footer' },
+        h('button', { className: 'btn-connect', onClick: () => login(tokenInput.value) }, 'Connect'),
+      ),
+    ),
+  );
+}
+
 /* ---------- Render: Login ---------- */
 function renderLogin() {
   const input = h('input', { type: 'password', placeholder: 'Paste your token...' });
@@ -1230,7 +1471,11 @@ function render() {
   const app = $('#app');
   app.innerHTML = '';
   if (!state.token) {
-    app.append(renderLogin());
+    if (state.setupMode) {
+      app.append(renderSetup());
+    } else {
+      app.append(renderLogin());
+    }
     return;
   }
   app.append(renderNavbar());
@@ -1256,8 +1501,20 @@ document.addEventListener('keydown', (e) => {
 });
 
 /* ---------- Boot ---------- */
-render();
-if (state.token) loadNamespaces();
+// Boot: fetch auth config, then decide setup vs login vs dashboard
+(async () => {
+  try {
+    const res = await fetch(baseUrl + '/auth/config');
+    if (res.ok) state.authConfig = await res.json();
+  } catch {}
+
+  if (!state.token) {
+    state.setupMode = true;
+  }
+
+  render();
+  if (state.token) loadNamespaces();
+})();
 </script>
 </body>
 </html>
