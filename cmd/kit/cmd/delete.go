@@ -5,12 +5,13 @@ import (
 
 	"github.com/dunkinfrunkin/kit/internal/client"
 	"github.com/dunkinfrunkin/kit/internal/config"
+	"github.com/dunkinfrunkin/kit/internal/install"
 	"github.com/spf13/cobra"
 )
 
 var deleteCmd = &cobra.Command{
 	Use:   "delete <ref>",
-	Short: "Delete an item from the server",
+	Short: "Delete an item from the server and remove it locally",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ref := args[0]
@@ -35,7 +36,9 @@ var deleteCmd = &cobra.Command{
 			if err := c.DeleteItem(namespace, t, name); err != nil {
 				return err
 			}
-			fmt.Printf("Deleted %s %s/%s from server\n", t, namespace, name)
+			install.Uninstall(t, name, install.Options{})
+			trackUninstall(namespace, t, name)
+			fmt.Printf("Deleted %s %s/%s\n", t, namespace, name)
 			return nil
 		}
 		return fmt.Errorf("item %s/%s not found on server", namespace, name)
