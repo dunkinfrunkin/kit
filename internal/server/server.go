@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -181,9 +182,14 @@ func (s *Server) handleSSORedirect(w http.ResponseWriter, r *http.Request) {
 	}
 
 	callbackURL := "http://" + r.Host + "/auth/callback"
-	params := fmt.Sprintf("%s?client_id=%s&response_type=code&scope=openid+email+profile&redirect_uri=%s&state=ui",
-		authEndpoint, cfg.ClientID, callbackURL)
-	http.Redirect(w, r, params, http.StatusFound)
+	q := url.Values{
+		"client_id":     {cfg.ClientID},
+		"response_type": {"code"},
+		"scope":         {"openid email profile"},
+		"redirect_uri":  {callbackURL},
+		"state":         {"ui"},
+	}
+	http.Redirect(w, r, authEndpoint+"?"+q.Encode(), http.StatusFound)
 }
 
 func (s *Server) handleSSOCallback(w http.ResponseWriter, r *http.Request) {
