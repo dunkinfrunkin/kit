@@ -320,7 +320,7 @@ export default function Home(): ReactNode {
                 GitHub
               </Link>
               <Link className={clsx('button button--secondary button--md', styles.heroSecondary)}
-                to="#features">
+                to="/docs">
                 Docs
               </Link>
             </div>

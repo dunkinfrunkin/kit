@@ -29,7 +29,10 @@ const config: Config = {
     [
       'classic',
       {
-        docs: false,
+        docs: {
+          sidebarPath: './sidebars.ts',
+          routeBasePath: 'docs',
+        },
         blog: false,
         theme: {
           customCss: './src/css/custom.css',
@@ -53,6 +56,17 @@ const config: Config = {
         height: 28,
       },
       items: [
+        {
+          type: 'docSidebar',
+          sidebarId: 'docs',
+          label: 'Docs',
+          position: 'left',
+        },
+        {
+          href: 'https://github.com/dunkinfrunkin/kit',
+          label: 'GitHub',
+          position: 'right',
+        },
         {
           type: 'html',
           position: 'right',
