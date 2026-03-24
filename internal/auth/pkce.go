@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math/big"
 	"net"
 	"net/http"
 	"net/url"
@@ -73,23 +72,14 @@ func randomState() string {
 }
 
 func pickPort() (int, net.Listener, error) {
-	offset, err := rand.Int(rand.Reader, big.NewInt(24))
-	if err != nil {
-		return 0, nil, err
+	ln, err := net.Listen("tcp", "127.0.0.1:9876")
+	if err == nil {
+		return 9876, ln, nil
 	}
-	start := 9876 + int(offset.Int64())
-
-	for i := 0; i < 24; i++ {
-		port := 9876 + (start-9876+i)%24
-		ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
-		if err == nil {
-			return port, ln, nil
-		}
-	}
-	return 0, nil, fmt.Errorf("no available port in range 9876-9899")
+	return 0, nil, fmt.Errorf("port 9876 is in use — close the process using it and try again")
 }
 
-func StartPKCEFlow(issuer, clientID string) (token string, email string, err error) {
+func StartPKCEFlow(issuer, clientID, clientSecret string) (token string, email string, err error) {
 	verifier := GenerateCodeVerifier()
 	challenge := CodeChallenge(verifier)
 	state := randomState()
@@ -163,7 +153,7 @@ func StartPKCEFlow(issuer, clientID string) (token string, email string, err err
 			return "", "", res.err
 		}
 
-		tok, em, err := exchangeCode(tokenEndpoint, res.code, redirectURI, clientID, verifier)
+		tok, em, err := exchangeCode(tokenEndpoint, res.code, redirectURI, clientID, clientSecret, verifier)
 		srv.Close()
 		if err != nil {
 			return "", "", err
@@ -176,13 +166,16 @@ func StartPKCEFlow(issuer, clientID string) (token string, email string, err err
 	}
 }
 
-func exchangeCode(tokenEndpoint, code, redirectURI, clientID, verifier string) (string, string, error) {
+func exchangeCode(tokenEndpoint, code, redirectURI, clientID, clientSecret, verifier string) (string, string, error) {
 	form := url.Values{
 		"grant_type":    {"authorization_code"},
 		"code":          {code},
 		"redirect_uri":  {redirectURI},
 		"client_id":     {clientID},
 		"code_verifier": {verifier},
+	}
+	if clientSecret != "" {
+		form.Set("client_secret", clientSecret)
 	}
 
 	resp, err := http.PostForm(tokenEndpoint, form)

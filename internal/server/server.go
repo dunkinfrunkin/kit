@@ -149,6 +149,9 @@ func (s *Server) handleAuthConfig(w http.ResponseWriter, r *http.Request) {
 	if s.oidc != nil {
 		cfg["issuer"] = s.oidc.Config().Issuer
 		cfg["client_id"] = s.oidc.Config().ClientID
+		if s.oidc.Config().ClientSecret != "" {
+			cfg["client_secret"] = s.oidc.Config().ClientSecret
+		}
 	}
 	s.json(w, http.StatusOK, cfg)
 }

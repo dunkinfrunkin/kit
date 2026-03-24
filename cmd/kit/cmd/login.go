@@ -35,9 +35,10 @@ var loginCmd = &cobra.Command{
 			}
 
 			var authCfg struct {
-				SSOEnabled bool   `json:"sso_enabled"`
-				Issuer     string `json:"issuer"`
-				ClientID   string `json:"client_id"`
+				SSOEnabled   bool   `json:"sso_enabled"`
+				Issuer       string `json:"issuer"`
+				ClientID     string `json:"client_id"`
+				ClientSecret string `json:"client_secret"`
 			}
 			if err := json.NewDecoder(resp.Body).Decode(&authCfg); err != nil {
 				return fmt.Errorf("invalid auth config from server: %w", err)
@@ -46,7 +47,7 @@ var loginCmd = &cobra.Command{
 				return fmt.Errorf("SSO is not configured on this server")
 			}
 
-			token, email, err := auth.StartPKCEFlow(authCfg.Issuer, authCfg.ClientID)
+			token, email, err := auth.StartPKCEFlow(authCfg.Issuer, authCfg.ClientID, authCfg.ClientSecret)
 			if err != nil {
 				return fmt.Errorf("SSO login failed: %w", err)
 			}

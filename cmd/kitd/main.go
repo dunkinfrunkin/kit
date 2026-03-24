@@ -41,11 +41,13 @@ func main() {
 	var oidc *auth.OIDCVerifier
 	oidcIssuer := os.Getenv("KIT_OIDC_ISSUER")
 	oidcClientID := os.Getenv("KIT_OIDC_CLIENT_ID")
+	oidcClientSecret := os.Getenv("KIT_OIDC_CLIENT_SECRET")
 	if oidcIssuer != "" && oidcClientID != "" {
 		var err error
 		oidc, err = auth.NewOIDCVerifier(auth.OIDCConfig{
-			Issuer:   oidcIssuer,
-			ClientID: oidcClientID,
+			Issuer:       oidcIssuer,
+			ClientID:     oidcClientID,
+			ClientSecret: oidcClientSecret,
 		})
 		if err != nil {
 			log.Fatalf("OIDC setup failed: %v", err)
