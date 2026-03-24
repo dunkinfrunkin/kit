@@ -146,7 +146,7 @@
    Hero title & tagline
    ─────────────────────────────────────────────── */
 .heroTitle {
-  font-family: 'Plus Jakarta Sans', var(--ifm-font-family-base);
+  font-family: 'Outfit', var(--ifm-font-family-base);
   font-size: 4rem;
   font-weight: 800;
   letter-spacing: -0.04em;
