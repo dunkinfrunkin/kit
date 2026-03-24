@@ -214,12 +214,18 @@ func (s *Server) handleGet(itemType string) http.HandlerFunc {
 
 func (s *Server) handleList(itemType string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if _, err := s.authenticate(r); err != nil {
+		email, err := s.authenticate(r)
+		if err != nil {
 			s.error(w, http.StatusUnauthorized, "unauthorized")
 			return
 		}
 
 		namespace := r.PathValue("namespace")
+		if isPersonal(namespace) && ownerEmail(namespace) != email {
+			s.error(w, http.StatusForbidden, "access denied")
+			return
+		}
+
 		items, err := s.store.ListItems(namespace, itemType)
 		if err != nil {
 			s.error(w, http.StatusInternalServerError, "failed to list items")
@@ -232,7 +238,8 @@ func (s *Server) handleList(itemType string) http.HandlerFunc {
 
 func (s *Server) handleListAll(itemType string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if _, err := s.authenticate(r); err != nil {
+		email, err := s.authenticate(r)
+		if err != nil {
 			s.error(w, http.StatusUnauthorized, "unauthorized")
 			return
 		}
@@ -243,7 +250,15 @@ func (s *Server) handleListAll(itemType string) http.HandlerFunc {
 			return
 		}
 
-		s.json(w, http.StatusOK, items)
+		filtered := make([]store.Item, 0, len(items))
+		for _, item := range items {
+			if isPersonal(item.Namespace) && ownerEmail(item.Namespace) != email {
+				continue
+			}
+			filtered = append(filtered, item)
+		}
+
+		s.json(w, http.StatusOK, filtered)
 	}
 }
 
