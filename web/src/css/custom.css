@@ -1,0 +1,182 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+/* ───────────────────────────────────────────────
+   Light mode
+   ─────────────────────────────────────────────── */
+:root {
+  --ifm-color-primary: #059669;
+  --ifm-color-primary-dark: #047857;
+  --ifm-color-primary-darker: #065f46;
+  --ifm-color-primary-darkest: #064e3b;
+  --ifm-color-primary-light: #10b981;
+  --ifm-color-primary-lighter: #34d399;
+  --ifm-color-primary-lightest: #6ee7b7;
+
+  --ifm-font-family-base: 'Inter', system-ui, -apple-system, sans-serif;
+  --ifm-font-family-monospace: 'JetBrains Mono', ui-monospace, 'Cascadia Code',
+    'Fira Code', monospace;
+  --ifm-code-font-size: 90%;
+  --ifm-heading-font-weight: 700;
+
+  /* kit brand tokens – light */
+  --kit-bg: #ffffff;
+  --kit-bg-secondary: #f0fdf4;
+  --kit-text: #1e293b;
+  --kit-text-muted: #64748b;
+  --kit-border: #d1d5db;
+  --kit-accent: #059669;
+  --kit-accent-light: #d1fae5;
+  --kit-hero-gradient: linear-gradient(135deg, #059669, #0891b2, #2563eb);
+  --kit-glow: rgba(5, 150, 105, 0.12);
+  --kit-card-bg: #ffffff;
+  --kit-card-border: #e5e7eb;
+  --kit-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --kit-navbar-bg: rgba(255, 255, 255, 0.85);
+  --kit-navbar-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+/* ───────────────────────────────────────────────
+   Dark mode
+   ─────────────────────────────────────────────── */
+[data-theme='dark'] {
+  --ifm-color-primary: #34d399;
+  --ifm-color-primary-dark: #10b981;
+  --ifm-color-primary-darker: #059669;
+  --ifm-color-primary-darkest: #047857;
+  --ifm-color-primary-light: #6ee7b7;
+  --ifm-color-primary-lighter: #a7f3d0;
+  --ifm-color-primary-lightest: #d1fae5;
+
+  --kit-bg: #0f172a;
+  --kit-bg-secondary: #1e293b;
+  --kit-text: #e2e8f0;
+  --kit-text-muted: #94a3b8;
+  --kit-border: #334155;
+  --kit-accent: #34d399;
+  --kit-accent-light: rgba(52, 211, 153, 0.15);
+  --kit-hero-gradient: linear-gradient(135deg, #34d399, #22d3ee, #60a5fa);
+  --kit-glow: rgba(52, 211, 153, 0.08);
+  --kit-card-bg: #1e293b;
+  --kit-card-border: #334155;
+  --kit-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --kit-navbar-bg: rgba(15, 23, 42, 0.85);
+  --kit-navbar-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* ───────────────────────────────────────────────
+   Navbar
+   ─────────────────────────────────────────────── */
+.navbar {
+  background: var(--kit-navbar-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--kit-navbar-shadow);
+  border-bottom: 1px solid var(--kit-card-border);
+}
+
+.navbar__title {
+  font-family: var(--ifm-font-family-monospace);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.navbar__link {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.navbar__link:hover {
+  color: var(--kit-accent);
+}
+
+/* ───────────────────────────────────────────────
+   Navbar social icons
+   ─────────────────────────────────────────────── */
+.navbar-socials {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.navbar-socials a {
+  display: flex;
+  align-items: center;
+  color: var(--kit-text-muted);
+  transition: color 0.15s ease;
+}
+
+.navbar-socials a:hover {
+  color: var(--kit-accent);
+  text-decoration: none;
+}
+
+.navbar-socials svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ───────────────────────────────────────────────
+   Footer
+   ─────────────────────────────────────────────── */
+.footer {
+  background: var(--kit-bg-secondary);
+  border-top: 1px solid var(--kit-card-border);
+}
+
+.footer__title {
+  font-family: var(--ifm-font-family-monospace);
+  font-weight: 600;
+}
+
+.footer__link-item:hover {
+  color: var(--kit-accent);
+}
+
+/* ───────────────────────────────────────────────
+   Sidebar
+   ─────────────────────────────────────────────── */
+.menu__link--active:not(.menu__link--sublist-caret) {
+  border-right: 3px solid var(--kit-accent);
+}
+
+/* ───────────────────────────────────────────────
+   Code blocks
+   ─────────────────────────────────────────────── */
+code {
+  font-family: var(--ifm-font-family-monospace);
+  border-radius: 4px;
+}
+
+.prism-code {
+  font-family: var(--ifm-font-family-monospace);
+}
+
+/* ───────────────────────────────────────────────
+   Scrollbar (Webkit)
+   ─────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--kit-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--kit-text-muted);
+}
+
+/* ───────────────────────────────────────────────
+   Selection
+   ─────────────────────────────────────────────── */
+::selection {
+  background: var(--kit-accent-light);
+  color: var(--kit-accent);
+}
