@@ -1,4 +1,6 @@
 # Binaries
+kit
+kitd
 bin/
 dist/
 *.exe
