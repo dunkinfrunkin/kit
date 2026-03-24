@@ -57,13 +57,10 @@ func New(s *store.Store, secret string) *Server {
 	}
 
 	staticFS, _ := fs.Sub(staticFiles, "static")
-	srv.mux.Handle("GET /ui", http.StripPrefix("/ui", http.FileServer(http.FS(staticFS))))
-	srv.mux.Handle("GET /ui/", http.StripPrefix("/ui/", http.FileServer(http.FS(staticFS))))
-	srv.mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/" {
-			http.Redirect(w, r, "/ui", http.StatusFound)
-			return
-		}
+	indexHTML, _ := fs.ReadFile(staticFS, "index.html")
+	srv.mux.HandleFunc("GET /ui", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Write(indexHTML)
 	})
 
 	srv.mux.HandleFunc("POST /login", srv.handleLogin)
