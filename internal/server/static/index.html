@@ -1193,20 +1193,6 @@ function renderSetup() {
         : 'Set environment variables to enable SSO, or use the built-in email auth.',
       code: ssoOk ? null : 'KIT_OIDC_ISSUER=https://yourcompany.okta.com/oauth2/default\nKIT_OIDC_CLIENT_ID=your-client-id',
     },
-    {
-      num: '3', done: false,
-      title: 'Connect from the CLI',
-      desc: 'Install the CLI and authenticate with your server.',
-      code: ssoOk
-        ? 'brew install dunkinfrunkin/tap/kit\nkit login --server ' + serverUrl + ' --sso'
-        : 'brew install dunkinfrunkin/tap/kit\nkit login --server ' + serverUrl,
-    },
-    {
-      num: '4', done: false,
-      title: 'Push your first item',
-      desc: 'Share a skill, hook, or config with your team.',
-      code: 'kit push ./my-skill/ --team backend\nkit push ./conventions.md --team backend',
-    },
   ];
 
   const stepEls = steps.map(s => {
