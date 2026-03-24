@@ -5,324 +5,755 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>kit</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #282c34;
-  --bg-sidebar: #21252b;
-  --bg-card: #2c313a;
-  --bg-hover: #353b45;
-  --bg-input: #1e2127;
-  --text: #abb2bf;
-  --text-bright: #d7dae0;
-  --text-muted: #636d83;
-  --blue: #61afef;
-  --green: #98c379;
-  --yellow: #e5c07b;
-  --purple: #c678dd;
-  --red: #e06c75;
-  --border: #3e4452;
-  --radius: 6px;
+  --bg: #0a0a0b;
+  --surface: #141416;
+  --surface-elevated: #1c1c1f;
+  --surface-hover: #232326;
+  --border: rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.1);
+  --text-primary: #ededef;
+  --text-secondary: #8b8b8e;
+  --text-muted: #5c5c5f;
+  --accent: #22c55e;
+  --accent-glow: rgba(34,197,94,0.15);
+  --accent-dim: rgba(34,197,94,0.08);
+  --skill-bg: rgba(34,197,94,0.1);
+  --skill-text: #22c55e;
+  --hook-bg: rgba(245,158,11,0.1);
+  --hook-text: #f59e0b;
+  --config-bg: rgba(59,130,246,0.1);
+  --config-text: #3b82f6;
+  --error: #ef4444;
+  --error-bg: rgba(239,68,68,0.08);
+  --card-gradient: linear-gradient(135deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+  --radius: 8px;
+  --radius-lg: 12px;
+  --transition: 180ms ease;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --navbar-h: 56px;
+  --sidebar-w: 260px;
+  --syntax-comment: #5c5c5f;
+  --syntax-string: #22c55e;
+  --syntax-keyword: #a78bfa;
+  --syntax-number: #f59e0b;
 }
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
 body {
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: var(--font-sans);
   background: var(--bg);
-  color: var(--text);
+  color: var(--text-primary);
   height: 100vh;
   overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
-code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
 
-/* Navbar */
+code, pre, .mono { font-family: var(--font-mono); }
+
+/* ---------- Scrollbar ---------- */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.14); }
+
+/* ---------- Navbar ---------- */
 .navbar {
   display: flex;
   align-items: center;
-  height: 48px;
-  padding: 0 16px;
-  background: var(--bg-sidebar);
+  height: var(--navbar-h);
+  padding: 0 24px;
+  background: var(--surface);
   border-bottom: 1px solid var(--border);
-  gap: 12px;
-  z-index: 10;
+  position: relative;
+  z-index: 100;
+  gap: 16px;
 }
-.navbar .logo {
+.navbar::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 200px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+  opacity: 0.5;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 700;
   font-size: 18px;
-  color: var(--blue);
+  color: var(--accent);
   letter-spacing: -0.5px;
+  user-select: none;
 }
-.navbar .spacer { flex: 1; }
-.navbar .server-info {
-  font-size: 12px;
-  color: var(--text-muted);
-}
-.navbar .user-email {
-  font-size: 12px;
-  color: var(--text);
-  background: var(--bg-card);
-  padding: 2px 8px;
-  border-radius: 10px;
-}
-.status-dot {
-  width: 8px; height: 8px;
+.logo-dot {
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: var(--green);
-  display: inline-block;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+  animation: pulse-dot 2.5s ease-in-out infinite;
 }
-.status-dot.error { background: var(--red); }
-.btn {
-  padding: 6px 14px;
-  border: none;
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.logo-dot.error { background: var(--error); box-shadow: 0 0 8px rgba(239,68,68,0.3); }
+.nav-spacer { flex: 1; }
+.nav-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+.nav-email {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.nav-server {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
   border-radius: var(--radius);
-  font-family: inherit;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: all var(--transition);
 }
-.btn:hover { opacity: 0.85; }
-.btn-primary { background: var(--blue); color: #fff; }
-.btn-danger { background: var(--red); color: #fff; }
-.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-ghost:hover {
+  background: var(--surface-elevated);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+.btn-ghost svg { opacity: 0.7; }
 
-/* Layout */
-.app { display: flex; height: calc(100vh - 48px); }
+/* ---------- Layout ---------- */
+.app-layout {
+  display: flex;
+  height: calc(100vh - var(--navbar-h));
+}
+
+/* ---------- Sidebar ---------- */
 .sidebar {
-  width: 240px;
-  min-width: 240px;
-  background: var(--bg-sidebar);
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-w);
+  background: var(--surface);
   border-right: 1px solid var(--border);
   overflow-y: auto;
-  padding: 12px 0;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: width var(--transition), min-width var(--transition);
 }
-.main {
+.sidebar-search {
+  padding: 16px 16px 8px;
+  flex-shrink: 0;
+}
+.search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: border-color var(--transition);
+}
+.search-wrap:focus-within {
+  border-color: rgba(34,197,94,0.3);
+}
+.search-wrap svg {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+.search-wrap input {
+  flex: 1;
+  border: none;
+  background: none;
+  outline: none;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+.search-wrap input::placeholder { color: var(--text-muted); }
+
+.sidebar-nav {
   flex: 1;
   overflow-y: auto;
-  padding: 24px;
+  padding: 4px 0 16px;
 }
-
-/* Sidebar */
-.sidebar-section { margin-bottom: 8px; }
+.sidebar-section { margin-top: 8px; }
 .sidebar-section-title {
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
   color: var(--text-muted);
-  padding: 8px 16px 4px;
+  padding: 12px 16px 6px;
+  user-select: none;
 }
 .sidebar-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 16px;
+  gap: 10px;
+  padding: 8px 16px;
+  margin: 1px 8px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 13px;
-  transition: background 0.1s;
-  color: var(--text);
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: all var(--transition);
+  position: relative;
+  user-select: none;
 }
-.sidebar-item:hover { background: var(--bg-hover); }
-.sidebar-item.active { background: var(--bg-hover); color: var(--text-bright); }
-.sidebar-item .icon { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
-.sidebar-item .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sidebar-item .badge {
+.sidebar-item:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+.sidebar-item.active {
+  background: var(--accent-dim);
+  color: var(--text-primary);
+}
+.sidebar-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: var(--accent);
+}
+.sidebar-item svg {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+.sidebar-item.active svg { opacity: 1; color: var(--accent); }
+.sidebar-item .name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sidebar-item .count-badge {
   font-size: 11px;
-  background: var(--bg);
+  font-weight: 600;
+  background: rgba(255,255,255,0.06);
   color: var(--text-muted);
-  padding: 1px 6px;
+  padding: 1px 7px;
   border-radius: 10px;
-  min-width: 20px;
+  min-width: 22px;
   text-align: center;
 }
+.sidebar-item.active .count-badge {
+  background: var(--accent-glow);
+  color: var(--accent);
+}
 
-/* Content header */
+/* ---------- Main Content ---------- */
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px;
+  background: var(--bg);
+}
 .content-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 28px;
 }
 .content-header h2 {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text-bright);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
 }
-.search-input {
-  margin-left: auto;
-  padding: 7px 12px;
-  background: var(--bg-input);
+.content-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ---------- Card Grid ---------- */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.item-card {
+  background: var(--card-gradient), var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  cursor: pointer;
+  transition: all var(--transition);
+  position: relative;
+  overflow: hidden;
+  animation: card-enter 0.3s ease backwards;
+}
+.item-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3), 0 0 0 1px var(--border-hover);
+  transform: translateY(-1px);
+}
+.item-card.expanded {
+  grid-column: 1 / -1;
+  cursor: default;
+}
+.item-card.expanded:hover {
+  transform: none;
+}
+@keyframes card-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.type-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.type-badge.skill { background: var(--skill-bg); color: var(--skill-text); }
+.type-badge.hook { background: var(--hook-bg); color: var(--hook-text); }
+.type-badge.config { background: var(--config-bg); color: var(--config-text); }
+
+.ns-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  background: rgba(255,255,255,0.04);
+  color: var(--text-muted);
+}
+.card-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 14px;
+  word-break: break-word;
+  font-family: var(--font-mono);
+  letter-spacing: -0.2px;
+}
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.card-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.card-meta-item svg { opacity: 0.5; }
+.version-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: rgba(255,255,255,0.04);
+  padding: 1px 7px;
+  border-radius: 4px;
+}
+
+/* ---------- Expanded Card Content ---------- */
+.card-expand-content {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  overflow: hidden;
+  transition: max-height 0.25s ease, opacity 0.2s ease;
+}
+.card-expand-content pre {
+  background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  color: var(--text);
-  font-family: inherit;
+  padding: 16px 20px;
   font-size: 13px;
-  width: 260px;
-  outline: none;
-  transition: border-color 0.15s;
+  line-height: 1.7;
+  overflow-x: auto;
+  max-height: 420px;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  tab-size: 2;
 }
-.search-input:focus { border-color: var(--blue); }
-.search-input::placeholder { color: var(--text-muted); }
-
-/* Table */
-.items-table { width: 100%; border-collapse: collapse; }
-.items-table th {
-  text-align: left;
-  font-size: 11px;
+.card-expand-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.card-expand-title {
+  font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--text-muted);
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border);
 }
-.items-table td {
-  padding: 10px 12px;
-  font-size: 13px;
-  border-bottom: 1px solid var(--border);
-  vertical-align: top;
-}
-.items-table tr.item-row { cursor: pointer; transition: background 0.1s; }
-.items-table tr.item-row:hover { background: var(--bg-hover); }
-.type-badge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-.type-badge.skill { background: rgba(152,195,121,0.15); color: var(--green); }
-.type-badge.hook  { background: rgba(229,192,123,0.15); color: var(--yellow); }
-.type-badge.config { background: rgba(97,175,239,0.15); color: var(--blue); }
-
-/* Expanded content */
-.item-detail td {
-  padding: 0 12px 12px;
-  border-bottom: 1px solid var(--border);
-}
-.item-detail pre {
-  background: var(--bg-input);
+.btn-close-expand {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
   font-size: 12px;
-  line-height: 1.6;
-  overflow-x: auto;
-  max-height: 400px;
-  color: var(--text);
-  white-space: pre-wrap;
-  word-break: break-word;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.btn-close-expand:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
 }
 
-/* Login card */
+/* Syntax highlighting inside pre */
+.syn-comment { color: var(--syntax-comment); font-style: italic; }
+.syn-string { color: var(--syntax-string); }
+.syn-keyword { color: var(--syntax-keyword); }
+.syn-number { color: var(--syntax-number); }
+
+/* ---------- Loading Skeleton ---------- */
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.skeleton-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.skeleton-line {
+  height: 12px;
+  border-radius: 4px;
+  background: var(--surface-elevated);
+  margin-bottom: 10px;
+}
+.skeleton-line.w40 { width: 40%; }
+.skeleton-line.w70 { width: 70%; }
+.skeleton-line.w55 { width: 55%; }
+.skeleton-line.badge {
+  width: 50px;
+  height: 20px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+}
+
+/* ---------- Empty State ---------- */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+}
+.empty-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--surface-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.empty-icon svg { color: var(--text-muted); }
+.empty-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.empty-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+.empty-desc code {
+  background: var(--surface-elevated);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--accent);
+  font-family: var(--font-mono);
+}
+
+/* ---------- Error Banner ---------- */
+.error-banner {
+  background: var(--error-bg);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  color: var(--error);
+  font-size: 13px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---------- Login Screen ---------- */
 .login-overlay {
   display: flex;
   align-items: center;
   justify-content: center;
   height: 100vh;
   background: var(--bg);
+  position: relative;
+  overflow: hidden;
+}
+.login-glow {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(34,197,94,0.06) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
 }
 .login-card {
-  background: var(--bg-card);
+  position: relative;
+  background: rgba(20,20,22,0.8);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 36px;
-  width: 380px;
+  border-radius: 16px;
+  padding: 48px 40px;
+  width: 400px;
   text-align: center;
+  animation: login-enter 0.4s ease;
 }
-.login-card h1 {
-  font-size: 28px;
+@keyframes login-enter {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.login-logo {
+  font-size: 32px;
   font-weight: 700;
-  color: var(--blue);
+  color: var(--accent);
+  letter-spacing: -1px;
   margin-bottom: 8px;
 }
-.login-card p { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
-.login-card code {
-  background: var(--bg-input);
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 12px;
-  color: var(--yellow);
+.login-subtitle {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
 }
-.login-card input {
-  width: 100%;
-  padding: 10px 12px;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--text);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  margin-bottom: 14px;
-  outline: none;
-}
-.login-card input:focus { border-color: var(--blue); }
-.login-card .btn { width: 100%; padding: 10px; font-size: 14px; }
-
-/* Spinner */
-.spinner {
-  display: inline-block;
-  width: 20px; height: 20px;
-  border: 2px solid var(--border);
-  border-top-color: var(--blue);
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-.loading-wrap {
+.login-field {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 60px;
   gap: 10px;
-  color: var(--text-muted);
-  font-size: 13px;
-}
-
-/* Error banner */
-.error-banner {
-  background: rgba(224,108,117,0.12);
-  border: 1px solid var(--red);
+  padding: 12px 14px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 10px 14px;
-  color: var(--red);
-  font-size: 13px;
   margin-bottom: 16px;
+  transition: border-color var(--transition);
 }
-
-/* Empty state */
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  color: var(--text-muted);
+.login-field:focus-within {
+  border-color: rgba(34,197,94,0.4);
+}
+.login-field svg { flex-shrink: 0; color: var(--text-muted); }
+.login-field input {
+  flex: 1;
+  border: none;
+  background: none;
+  outline: none;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
   font-size: 14px;
+}
+.login-field input::placeholder { color: var(--text-muted); }
+.btn-connect {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  box-shadow: 0 2px 12px rgba(34,197,94,0.2);
+}
+.btn-connect:hover {
+  box-shadow: 0 4px 20px rgba(34,197,94,0.3);
+  transform: translateY(-1px);
+}
+.btn-connect:active { transform: translateY(0); }
+.login-help {
+  margin-top: 20px;
+  font-size: 12px;
+  color: var(--text-muted);
   line-height: 1.6;
 }
-.empty-state code {
-  background: var(--bg-input);
+.login-help code {
+  background: var(--surface-elevated);
   padding: 2px 6px;
   border-radius: 4px;
-  font-size: 12px;
-  color: var(--yellow);
+  font-size: 11px;
+  color: var(--accent);
+  font-family: var(--font-mono);
 }
 
-/* Transitions */
-.fade-in { animation: fadeIn 0.15s ease-in; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+/* ---------- Mobile Drawer ---------- */
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 49;
+}
+.sidebar-backdrop.visible { display: block; }
+.menu-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.menu-toggle:hover { background: var(--surface-elevated); color: var(--text-primary); }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+/* ---------- Responsive ---------- */
+@media (max-width: 1200px) {
+  .card-grid { grid-template-columns: repeat(2, 1fr); }
+  .skeleton-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 64px;
+    min-width: 64px;
+  }
+  .sidebar .sidebar-search,
+  .sidebar .sidebar-section-title,
+  .sidebar .name,
+  .sidebar .count-badge { display: none; }
+  .sidebar-item {
+    justify-content: center;
+    padding: 10px;
+    margin: 1px 6px;
+  }
+  .sidebar-item svg { opacity: 0.8; }
+  .sidebar-item.active::before { display: none; }
+}
+@media (max-width: 768px) {
+  .card-grid, .skeleton-grid { grid-template-columns: 1fr; }
+  .menu-toggle { display: flex; }
+  .sidebar {
+    position: fixed;
+    top: var(--navbar-h);
+    left: 0;
+    bottom: 0;
+    width: var(--sidebar-w);
+    min-width: var(--sidebar-w);
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+  }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar.open ~ .sidebar-backdrop { display: block; }
+  .sidebar .sidebar-search,
+  .sidebar .sidebar-section-title,
+  .sidebar .name,
+  .sidebar .count-badge { display: unset; }
+  .sidebar-item {
+    justify-content: flex-start;
+    padding: 8px 16px;
+    margin: 1px 8px;
+  }
+  .sidebar-item.active::before { display: block; }
+  .main-content { padding: 20px 16px; }
+  .nav-server { display: none; }
+}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <script>
+/* ---------- SVG Icons ---------- */
+const icons = {
+  home: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.5L8 2l5.5 4.5V13a1 1 0 01-1 1h-9a1 1 0 01-1-1V6.5z"/><path d="M6 14V9h4v5"/></svg>`,
+  folder: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4.5A1.5 1.5 0 013.5 3h2.672a1 1 0 01.707.293L8.293 4.707A1 1 0 009 5h3.5A1.5 1.5 0 0114 6.5v5a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 012 11.5v-7z"/></svg>`,
+  lock: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7" width="9" height="6" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 015 0v2"/></svg>`,
+  search: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg>`,
+  pkg: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5l7-3.5 7 3.5v7l-7 3.5-7-3.5v-7z"/><path d="M3 6.5L10 10m0 0v7m0-7l7-3.5"/></svg>`,
+  key: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="10.5" r="2.5"/><path d="M7.5 8.5L12 4m0 0v2.5M12 4H9.5"/></svg>`,
+  chevronDown: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>`,
+  logout: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 14H3.5A1.5 1.5 0 012 12.5v-9A1.5 1.5 0 013.5 2H6"/><path d="M10.5 11.5L14 8l-3.5-3.5"/><path d="M14 8H6"/></svg>`,
+  check: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5L5.5 10 11 4"/></svg>`,
+  clock: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="5.5"/><path d="M7 4v3.5l2 1.5"/></svg>`,
+  menu: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 5h12M3 9h12M3 13h12"/></svg>`,
+  x: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg>`,
+  user: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="4.5" r="2.5"/><path d="M2.5 12.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4"/></svg>`,
+};
+
+function icon(name, size) {
+  const s = size || 16;
+  const span = document.createElement('span');
+  span.style.display = 'inline-flex';
+  span.style.width = s + 'px';
+  span.style.height = s + 'px';
+  span.style.flexShrink = '0';
+  span.innerHTML = icons[name] || '';
+  return span;
+}
+
+/* ---------- DOM Helpers ---------- */
 const $ = (sel, ctx = document) => ctx.querySelector(sel);
 const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
-const h = (tag, attrs = {}, ...children) => {
+function h(tag, attrs = {}, ...children) {
   const el = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) {
     if (k.startsWith('on')) el.addEventListener(k.slice(2).toLowerCase(), v);
@@ -331,16 +762,18 @@ const h = (tag, attrs = {}, ...children) => {
     else el.setAttribute(k, v);
   }
   for (const c of children.flat()) {
-    if (c == null) continue;
+    if (c == null || c === false) continue;
     el.append(typeof c === 'string' ? document.createTextNode(c) : c);
   }
   return el;
-};
+}
 
+/* ---------- State ---------- */
 const state = {
   token: localStorage.getItem('kit_token') || '',
   namespaces: [],
   items: [],
+  allItems: [],
   selected: null,
   expanded: null,
   expandedContent: null,
@@ -348,10 +781,12 @@ const state = {
   error: null,
   searchQuery: '',
   email: '',
+  drawerOpen: false,
 };
 
 const baseUrl = window.location.origin;
 
+/* ---------- Utils ---------- */
 function decodeJwtEmail(token) {
   try {
     const parts = token.split('.');
@@ -361,6 +796,38 @@ function decodeJwtEmail(token) {
   } catch { return ''; }
 }
 
+function relativeTime(d) {
+  if (!d) return '';
+  try {
+    const dt = new Date(d);
+    if (isNaN(dt)) return d;
+    const now = Date.now();
+    const diff = now - dt.getTime();
+    const sec = Math.floor(diff / 1000);
+    if (sec < 30) return 'just now';
+    if (sec < 60) return sec + 's ago';
+    const min = Math.floor(sec / 60);
+    if (min < 60) return min + 'm ago';
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return hr + 'h ago';
+    const day = Math.floor(hr / 24);
+    if (day < 7) return day + 'd ago';
+    if (day < 30) return Math.floor(day / 7) + 'w ago';
+    return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  } catch { return d; }
+}
+
+function highlightSyntax(code) {
+  const esc = code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return esc
+    .replace(/(\/\/.*$|#.*$)/gm, '<span class="syn-comment">$1</span>')
+    .replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="syn-comment">$1</span>')
+    .replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)/g, '<span class="syn-string">$1</span>')
+    .replace(/\b(func|function|return|if|else|for|range|var|let|const|import|export|from|package|type|struct|interface|switch|case|default|break|continue|class|async|await|try|catch|throw|new|true|false|nil|null|undefined)\b/g, '<span class="syn-keyword">$1</span>')
+    .replace(/\b(\d+\.?\d*)\b/g, '<span class="syn-number">$1</span>');
+}
+
+/* ---------- API ---------- */
 async function apiFetch(path) {
   const res = await fetch(path, {
     headers: { 'Authorization': 'Bearer ' + state.token },
@@ -380,7 +847,7 @@ async function loadNamespaces() {
       apiFetch('/configs').catch(() => []),
     ]);
     const nsMap = {};
-    const add = (list, type) => {
+    const add = (list) => {
       if (!Array.isArray(list)) return;
       for (const item of list) {
         const ns = item.namespace || item.Namespace;
@@ -389,9 +856,7 @@ async function loadNamespaces() {
         nsMap[ns].count++;
       }
     };
-    add(skills, 'skill');
-    add(hooks, 'hook');
-    add(configs, 'config');
+    add(skills); add(hooks); add(configs);
     state.namespaces = Object.values(nsMap).sort((a, b) => a.name.localeCompare(b.name));
     state.allItems = buildAllItems(skills, hooks, configs);
     state.selected = null;
@@ -432,6 +897,7 @@ async function selectNamespace(ns) {
   state.expanded = null;
   state.expandedContent = null;
   state.searchQuery = '';
+  state.drawerOpen = false;
   if (!ns) {
     state.items = state.allItems || [];
     render();
@@ -488,17 +954,30 @@ async function toggleExpand(item) {
 }
 
 let searchTimeout;
-async function doSearch(query) {
+function doSearch(query) {
   state.searchQuery = query;
+  state.expanded = null;
+  state.expandedContent = null;
+
   if (!query.trim()) {
     state.selected ? selectNamespace(state.selected) : selectNamespace(null);
     return;
   }
+
+  // Instant client-side filter
+  const q = query.toLowerCase();
+  const source = state.selected
+    ? state.items
+    : (state.allItems || []);
+  state.items = (state.allItems || []).filter(it =>
+    (state.selected ? it.namespace === state.selected : true) &&
+    (it.name.toLowerCase().includes(q) || it.type.toLowerCase().includes(q) || it.namespace.toLowerCase().includes(q) || (it.author||'').toLowerCase().includes(q))
+  );
+  render();
+
+  // Debounced server search
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(async () => {
-    state.loading = true;
-    state.error = null;
-    render();
     try {
       const results = await apiFetch('/search?q=' + encodeURIComponent(query));
       state.items = buildAllItems(
@@ -507,23 +986,9 @@ async function doSearch(query) {
         (results.configs || []),
       );
       if (Array.isArray(results)) state.items = buildAllItems(results, [], []);
-      state.loading = false;
       render();
-    } catch (e) {
-      state.loading = false;
-      state.error = 'Search failed: ' + e.message;
-      render();
-    }
-  }, 300);
-}
-
-function formatDate(d) {
-  if (!d) return '-';
-  try {
-    const dt = new Date(d);
-    if (isNaN(dt)) return d;
-    return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  } catch { return d; }
+    } catch { /* keep client-side results */ }
+  }, 400);
 }
 
 function login(token) {
@@ -542,131 +1007,224 @@ function logout() {
   render();
 }
 
+/* ---------- Render: Login ---------- */
 function renderLogin() {
   const input = h('input', { type: 'password', placeholder: 'Paste your token...' });
+  const field = h('div', { className: 'login-field' }, icon('key'), input);
+
   const card = h('div', { className: 'login-card' },
-    h('h1', {}, 'kit'),
-    h('p', {}, 'Enter your token to connect. Run ', h('code', {}, 'kit login'),
-      ' and find your token in ', h('code', {}, '~/.kit/credentials'), '.'),
-    input,
-    h('button', { className: 'btn btn-primary', onClick: () => login(input.value) }, 'Connect'),
+    h('div', { className: 'login-logo' }, 'kit'),
+    h('div', { className: 'login-subtitle' }, 'Connect to your server'),
+    field,
+    h('button', { className: 'btn-connect', onClick: () => login(input.value) }, 'Connect'),
+    h('div', { className: 'login-help' },
+      'Run ', h('code', {}, 'kit login'), ' to authenticate, or paste a token from ', h('code', {}, '~/.kit/credentials'), '.'),
   );
   input.addEventListener('keydown', e => { if (e.key === 'Enter') login(input.value); });
-  return h('div', { className: 'login-overlay' }, card);
-}
 
-function renderNavbar() {
-  return h('nav', { className: 'navbar' },
-    h('span', { className: 'logo' }, 'kit'),
-    h('span', { className: 'status-dot' + (state.error ? ' error' : '') }),
-    h('span', { className: 'server-info' }, baseUrl),
-    h('span', { className: 'spacer' }),
-    state.email ? h('span', { className: 'user-email' }, state.email) : null,
-    h('button', { className: 'btn btn-danger btn-sm', onClick: logout }, 'Logout'),
+  return h('div', { className: 'login-overlay' },
+    h('div', { className: 'login-glow' }),
+    card,
   );
 }
 
+/* ---------- Render: Navbar ---------- */
+function renderNavbar() {
+  const dot = h('span', { className: 'logo-dot' + (state.error ? ' error' : '') });
+
+  const menuBtn = h('button', { className: 'menu-toggle', onClick: () => {
+    state.drawerOpen = !state.drawerOpen;
+    const sb = $('.sidebar');
+    if (sb) sb.classList.toggle('open', state.drawerOpen);
+    const bd = $('.sidebar-backdrop');
+    if (bd) bd.classList.toggle('visible', state.drawerOpen);
+  }}, (() => { const s = document.createElement('span'); s.innerHTML = icons.menu; return s; })());
+
+  return h('nav', { className: 'navbar' },
+    menuBtn,
+    h('span', { className: 'logo' }, 'kit', dot),
+    h('span', { className: 'nav-spacer' }),
+    h('span', { className: 'nav-meta' },
+      state.email ? h('span', { className: 'nav-email' }, state.email) : null,
+      h('span', { className: 'nav-server' }, baseUrl),
+      h('button', { className: 'btn-ghost', onClick: logout }, icon('logout'), 'Logout'),
+    ),
+  );
+}
+
+/* ---------- Render: Sidebar ---------- */
 function renderSidebar() {
   const teams = state.namespaces.filter(n => !n.name.startsWith('@'));
   const personal = state.namespaces.filter(n => n.name.startsWith('@'));
 
-  const mkItem = (ns) => h('div', {
+  const searchInput = h('input', {
+    type: 'text',
+    placeholder: 'Search...',
+    value: state.searchQuery,
+    onInput: (e) => doSearch(e.target.value),
+  });
+
+  const mkItem = (ns, iconName) => h('div', {
     className: 'sidebar-item' + (state.selected === ns.name ? ' active' : ''),
     onClick: () => selectNamespace(ns.name),
   },
-    h('span', { className: 'icon' }, ns.name.startsWith('@') ? '\uD83D\uDD12' : '\uD83D\uDCC1'),
+    icon(iconName),
     h('span', { className: 'name' }, ns.name),
-    h('span', { className: 'badge' }, String(ns.count)),
+    h('span', { className: 'count-badge' }, String(ns.count)),
   );
 
   const allCount = state.namespaces.reduce((s, n) => s + n.count, 0);
-  return h('aside', { className: 'sidebar' },
-    h('div', { className: 'sidebar-item' + (state.selected === null ? ' active' : ''), onClick: () => selectNamespace(null) },
-      h('span', { className: 'icon' }, '\u2302'),
-      h('span', { className: 'name' }, 'All'),
-      h('span', { className: 'badge' }, String(allCount)),
+
+  const backdrop = h('div', { className: 'sidebar-backdrop', onClick: () => {
+    state.drawerOpen = false;
+    const sb = $('.sidebar');
+    if (sb) sb.classList.remove('open');
+    const bd = $('.sidebar-backdrop');
+    if (bd) bd.classList.remove('visible');
+  }});
+
+  const sidebar = h('aside', { className: 'sidebar' + (state.drawerOpen ? ' open' : '') },
+    h('div', { className: 'sidebar-search' },
+      h('div', { className: 'search-wrap' }, icon('search'), searchInput),
     ),
-    teams.length ? h('div', { className: 'sidebar-section' },
-      h('div', { className: 'sidebar-section-title' }, 'Teams'),
-      ...teams.map(mkItem),
-    ) : null,
-    personal.length ? h('div', { className: 'sidebar-section' },
-      h('div', { className: 'sidebar-section-title' }, 'Personal'),
-      ...personal.map(mkItem),
-    ) : null,
+    h('div', { className: 'sidebar-nav' },
+      h('div', {
+        className: 'sidebar-item' + (state.selected === null ? ' active' : ''),
+        onClick: () => selectNamespace(null),
+      },
+        icon('home'),
+        h('span', { className: 'name' }, 'All'),
+        h('span', { className: 'count-badge' }, String(allCount)),
+      ),
+      teams.length ? h('div', { className: 'sidebar-section' },
+        h('div', { className: 'sidebar-section-title' }, 'Teams'),
+        ...teams.map(n => mkItem(n, 'folder')),
+      ) : null,
+      personal.length ? h('div', { className: 'sidebar-section' },
+        h('div', { className: 'sidebar-section-title' }, 'Personal'),
+        ...personal.map(n => mkItem(n, 'lock')),
+      ) : null,
+    ),
+  );
+
+  return h('div', {}, sidebar, backdrop);
+}
+
+/* ---------- Render: Skeleton Loading ---------- */
+function renderSkeleton() {
+  const cards = [];
+  for (let i = 0; i < 6; i++) {
+    cards.push(h('div', { className: 'skeleton-card', style: `animation-delay:${i * 80}ms` },
+      h('div', { className: 'skeleton-line badge' }),
+      h('div', { className: 'skeleton-line w70' }),
+      h('div', { className: 'skeleton-line w40' }),
+    ));
+  }
+  return h('div', { className: 'skeleton-grid' }, ...cards);
+}
+
+/* ---------- Render: Card ---------- */
+function renderCard(item, index) {
+  const key = item.namespace + '/' + item.type + '/' + item.name;
+  const isExpanded = state.expanded === key;
+
+  const card = h('div', {
+    className: 'item-card' + (isExpanded ? ' expanded' : ''),
+    style: `animation-delay:${index * 40}ms`,
+    onClick: (e) => {
+      if (isExpanded && (e.target.closest('.card-expand-content') || e.target.closest('.btn-close-expand'))) return;
+      if (!isExpanded) toggleExpand(item);
+    },
+  },
+    h('div', { className: 'card-top' },
+      h('span', { className: 'type-badge ' + item.type }, item.type),
+      h('span', { className: 'ns-badge' }, item.namespace),
+    ),
+    h('div', { className: 'card-name' }, item.name),
+    h('div', { className: 'card-meta' },
+      item.author ? h('span', { className: 'card-meta-item' }, icon('user', 14), item.author) : null,
+      item.version ? h('span', { className: 'card-meta-item' }, icon('check', 14), h('span', { className: 'version-badge' }, item.version)) : null,
+      item.updated ? h('span', { className: 'card-meta-item' }, icon('clock', 14), relativeTime(item.updated)) : null,
+    ),
+    isExpanded ? renderExpandedContent(item) : null,
+  );
+
+  return card;
+}
+
+function renderExpandedContent(item) {
+  let body;
+  if (state.expandedContent === null) {
+    // Loading skeleton for content
+    body = h('div', { style: 'padding:16px 0' },
+      h('div', { className: 'skeleton-line w70', style: 'animation: skeleton-pulse 1.5s ease-in-out infinite' }),
+      h('div', { className: 'skeleton-line w55', style: 'animation: skeleton-pulse 1.5s ease-in-out infinite; animation-delay:100ms' }),
+      h('div', { className: 'skeleton-line w40', style: 'animation: skeleton-pulse 1.5s ease-in-out infinite; animation-delay:200ms' }),
+    );
+  } else {
+    const pre = h('pre', {});
+    pre.innerHTML = highlightSyntax(state.expandedContent);
+    body = pre;
+  }
+
+  const closeBtn = h('button', { className: 'btn-close-expand', onClick: (e) => {
+    e.stopPropagation();
+    state.expanded = null;
+    state.expandedContent = null;
+    render();
+  }},
+    (() => { const s = document.createElement('span'); s.innerHTML = icons.x; return s; })(),
+    'Close',
+  );
+
+  return h('div', { className: 'card-expand-content' },
+    h('div', { className: 'card-expand-header' },
+      h('span', { className: 'card-expand-title' }, 'Content'),
+      closeBtn,
+    ),
+    body,
   );
 }
 
+/* ---------- Render: Main Content ---------- */
 function renderMain() {
+  const title = state.selected || 'All Items';
+  const count = state.items.length;
+  const subtitle = state.loading ? 'Loading...' : (count + ' item' + (count !== 1 ? 's' : ''));
+
   const header = h('div', { className: 'content-header' },
-    h('h2', {}, state.selected || 'All Items'),
-    h('input', {
-      className: 'search-input',
-      type: 'text',
-      placeholder: 'Search items...',
-      value: state.searchQuery,
-      onInput: (e) => doSearch(e.target.value),
-    }),
+    h('h2', {}, title),
+    h('div', { className: 'content-subtitle' }, subtitle),
   );
+
+  let body;
 
   if (state.loading) {
-    return h('div', { className: 'main' }, header,
-      h('div', { className: 'loading-wrap' }, h('div', { className: 'spinner' }), 'Loading...'));
+    body = renderSkeleton();
+  } else if (state.error) {
+    body = h('div', { className: 'error-banner' }, state.error);
+  } else if (!state.items.length && !state.namespaces.length) {
+    body = h('div', { className: 'empty-state' },
+      h('div', { className: 'empty-icon' }, icon('pkg', 20)),
+      h('div', { className: 'empty-title' }, 'No items on this server'),
+      h('div', { className: 'empty-desc' }, 'This server is empty. Get started by pushing your first item.'),
+    );
+  } else if (!state.items.length) {
+    body = h('div', { className: 'empty-state' },
+      h('div', { className: 'empty-icon' }, icon('pkg', 20)),
+      h('div', { className: 'empty-title' }, 'No items found'),
+      h('div', { className: 'empty-desc' },
+        'Push something with ', h('code', {}, 'kit push'), ' to see it here.'),
+    );
+  } else {
+    const cards = state.items.map((item, i) => renderCard(item, i));
+    body = h('div', { className: 'card-grid' }, ...cards);
   }
 
-  if (state.error) {
-    return h('div', { className: 'main' }, header, h('div', { className: 'error-banner' }, state.error));
-  }
-
-  if (!state.items.length && !state.namespaces.length) {
-    return h('div', { className: 'main' }, header,
-      h('div', { className: 'empty-state' }, 'No items on this server yet.'));
-  }
-
-  if (!state.items.length) {
-    return h('div', { className: 'main' }, header,
-      h('div', { className: 'empty-state' },
-        'No items in this namespace yet. Push something with ', h('code', {}, 'kit push'), '.'));
-  }
-
-  const rows = [];
-  for (const item of state.items) {
-    const key = item.namespace + '/' + item.type + '/' + item.name;
-    const isExpanded = state.expanded === key;
-    rows.push(h('tr', { className: 'item-row', onClick: () => toggleExpand(item) },
-      h('td', {}, h('span', { className: 'type-badge ' + item.type }, item.type)),
-      h('td', { className: 'mono', style: 'color:var(--text-bright)' }, item.name),
-      h('td', {}, item.namespace),
-      h('td', {}, item.author || '-'),
-      h('td', {}, item.version || '-'),
-      h('td', {}, formatDate(item.updated)),
-    ));
-    if (isExpanded) {
-      const content = state.expandedContent === null
-        ? h('div', { className: 'loading-wrap' }, h('div', { className: 'spinner' }), 'Loading content...')
-        : h('pre', {}, state.expandedContent);
-      rows.push(h('tr', { className: 'item-detail' },
-        h('td', { colspan: '6' }, content)));
-    }
-  }
-
-  const table = h('table', { className: 'items-table' },
-    h('thead', {},
-      h('tr', {},
-        h('th', {}, 'Type'),
-        h('th', {}, 'Name'),
-        h('th', {}, 'Namespace'),
-        h('th', {}, 'Author'),
-        h('th', {}, 'Version'),
-        h('th', {}, 'Updated'),
-      ),
-    ),
-    h('tbody', {}, ...rows),
-  );
-
-  return h('div', { className: 'main fade-in' }, header, table);
+  return h('div', { className: 'main-content' }, header, body);
 }
 
+/* ---------- Render ---------- */
 function render() {
   const app = $('#app');
   app.innerHTML = '';
@@ -675,11 +1233,28 @@ function render() {
     return;
   }
   app.append(renderNavbar());
-  const layout = h('div', { className: 'app' }, renderSidebar(), renderMain());
+  const sidebarContainer = renderSidebar();
+  const layout = h('div', { className: 'app-layout' },
+    sidebarContainer,
+    renderMain(),
+  );
   app.append(layout);
 }
 
-// Boot
+/* ---------- Keyboard Shortcuts ---------- */
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && state.expanded) {
+    state.expanded = null;
+    state.expandedContent = null;
+    render();
+  }
+  if (e.key === 'Escape' && state.drawerOpen) {
+    state.drawerOpen = false;
+    render();
+  }
+});
+
+/* ---------- Boot ---------- */
 render();
 if (state.token) loadNamespaces();
 </script>
