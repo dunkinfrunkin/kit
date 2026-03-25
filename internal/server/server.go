@@ -110,6 +110,8 @@ func New(s *store.Store, secret string, oidc *auth.OIDCVerifier) *Server {
 	srv.mux.HandleFunc("POST /{namespace}/profiles/{name}/items", srv.handleAddProfileItem)
 	srv.mux.HandleFunc("DELETE /{namespace}/profiles/{name}", srv.handleDeleteProfile)
 
+	srv.mux.HandleFunc("GET /metrics", srv.handleMetrics)
+
 	return srv
 }
 
@@ -383,6 +385,7 @@ func (s *Server) handlePush(itemType string) http.HandlerFunc {
 		}
 
 		s.json(w, http.StatusOK, toItemResponse(item, content))
+		go s.store.RecordEvent("push", namespace, itemType, body.Name, email)
 	}
 }
 
@@ -418,6 +421,7 @@ func (s *Server) handleGet(itemType string) http.HandlerFunc {
 		}
 
 		s.json(w, http.StatusOK, toItemResponse(item, content))
+		go s.store.RecordEvent("install", namespace, itemType, name, email)
 	}
 }
 
@@ -488,6 +492,7 @@ func (s *Server) handleDelete(itemType string) http.HandlerFunc {
 		}
 
 		s.json(w, http.StatusOK, map[string]string{"status": "deleted"})
+		go s.store.RecordEvent("delete", namespace, itemType, name, email)
 	}
 }
 
@@ -681,6 +686,19 @@ func (s *Server) handleDeleteToken(w http.ResponseWriter, r *http.Request) {
 	// but for now we leave it (it will fail on next use since DB lookup would fail).
 
 	s.json(w, http.StatusOK, map[string]string{"status": "revoked"})
+}
+
+func (s *Server) handleMetrics(w http.ResponseWriter, r *http.Request) {
+	if _, err := s.authenticate(r); err != nil {
+		s.error(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	metrics, err := s.store.GetMetrics()
+	if err != nil {
+		s.error(w, http.StatusInternalServerError, "failed to get metrics")
+		return
+	}
+	s.json(w, http.StatusOK, metrics)
 }
 
 func (s *Server) json(w http.ResponseWriter, status int, v interface{}) {

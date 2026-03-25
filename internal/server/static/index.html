@@ -837,6 +837,103 @@ code, pre, .mono { font-family: var(--font-mono); }
   color: var(--text-muted);
 }
 
+/* ---------- Metrics ---------- */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.metric-card {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+.metric-card-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.metric-card-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+.metrics-section {
+  margin-bottom: 32px;
+}
+.metrics-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+.metrics-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.metrics-table th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.metrics-table td {
+  padding: 10px 16px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+}
+.metrics-table tr:last-child td { border-bottom: none; }
+.metrics-table tr:hover td { background: var(--surface-hover); }
+.metrics-rank {
+  color: var(--text-muted);
+  font-weight: 600;
+  width: 40px;
+}
+.metrics-count {
+  font-weight: 600;
+  color: var(--accent);
+}
+.activity-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.activity-item:last-child { border-bottom: none; }
+.activity-action {
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+  width: 60px;
+  text-align: center;
+}
+.activity-action.push { background: rgba(34,197,94,0.1); color: #22c55e; }
+.activity-action.install { background: rgba(59,130,246,0.1); color: #3b82f6; }
+.activity-action.delete { background: rgba(239,68,68,0.1); color: #ef4444; }
+.activity-detail { flex: 1; color: var(--text-secondary); }
+.activity-detail strong { color: var(--text-primary); }
+.activity-time { color: var(--text-muted); font-size: 12px; }
+@media (max-width: 1024px) { .metrics-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .metrics-grid { grid-template-columns: 1fr; } }
+
 /* ---------- Login Screen ---------- */
 .login-overlay {
   display: flex;
@@ -1203,6 +1300,7 @@ const icons = {
   user: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="4.5" r="2.5"/><path d="M2.5 12.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4"/></svg>`,
   copy: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="7" height="7" rx="1.5"/><path d="M9 5V3.5A1.5 1.5 0 007.5 2h-4A1.5 1.5 0 002 3.5v4A1.5 1.5 0 003.5 9H5"/></svg>`,
   warning: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 1.5L1 12.5h12L7 1.5z"/><path d="M7 6v2.5"/><circle cx="7" cy="10.5" r="0.5" fill="currentColor"/></svg>`,
+  chart: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
 };
 
 function icon(name, size) {
@@ -1255,6 +1353,8 @@ const state = {
   tokens: [],
   newTokenName: '',
   newTokenValue: null,
+  viewingMetrics: false,
+  metrics: null,
 };
 
 const baseUrl = window.location.origin;
@@ -1593,8 +1693,8 @@ function renderSidebar() {
   });
 
   const mkItem = (ns, iconName) => h('div', {
-    className: 'sidebar-item' + (state.selected === ns.name && !state.viewingTokens ? ' active' : ''),
-    onClick: () => { state.viewingTokens = false; selectNamespace(ns.name); },
+    className: 'sidebar-item' + (state.selected === ns.name && !state.viewingTokens && !state.viewingMetrics ? ' active' : ''),
+    onClick: () => { state.viewingTokens = false; state.viewingMetrics = false; selectNamespace(ns.name); },
   },
     icon(iconName),
     h('span', { className: 'name' }, ns.name),
@@ -1617,8 +1717,8 @@ function renderSidebar() {
     ),
     h('div', { className: 'sidebar-nav' },
       h('div', {
-        className: 'sidebar-item' + (state.selected === null && !state.viewingTokens ? ' active' : ''),
-        onClick: () => { state.viewingTokens = false; selectNamespace(null); },
+        className: 'sidebar-item' + (state.selected === null && !state.viewingTokens && !state.viewingMetrics ? ' active' : ''),
+        onClick: () => { state.viewingTokens = false; state.viewingMetrics = false; selectNamespace(null); },
       },
         icon('home'),
         h('span', { className: 'name' }, 'All'),
@@ -1638,6 +1738,7 @@ function renderSidebar() {
           className: 'sidebar-item' + (state.viewingTokens ? ' active' : ''),
           onClick: () => {
             state.viewingTokens = true;
+            state.viewingMetrics = false;
             state.viewingItem = null;
             state.expandedContent = null;
             state.newTokenValue = null;
@@ -1647,6 +1748,19 @@ function renderSidebar() {
         },
           icon('key'),
           h('span', { className: 'name' }, 'Tokens'),
+        ),
+        h('div', {
+          className: 'sidebar-item' + (state.viewingMetrics ? ' active' : ''),
+          onClick: () => {
+            state.viewingMetrics = true;
+            state.viewingTokens = false;
+            state.viewingItem = null;
+            state.drawerOpen = false;
+            fetchMetrics();
+          },
+        },
+          icon('chart'),
+          h('span', { className: 'name' }, 'Metrics'),
         ),
       ),
     ),
@@ -1900,8 +2014,150 @@ function renderTokensView() {
   return h('div', { className: 'main-content' }, header, createSection, revealSection, listSection);
 }
 
+/* ---------- Metrics API ---------- */
+async function fetchMetrics() {
+  state.metrics = null;
+  render();
+  try {
+    state.metrics = await apiFetch('/metrics');
+  } catch (e) {
+    state.metrics = { error: e.message };
+  }
+  render();
+}
+
+/* ---------- Render: Metrics View ---------- */
+function renderMetricsView() {
+  const header = h('div', { className: 'content-header' },
+    h('h2', {}, 'Metrics'),
+    h('div', { className: 'content-subtitle' }, 'Analytics and usage overview'),
+  );
+
+  if (state.metrics === null) {
+    // Skeleton loading
+    const skeletonCards = [];
+    for (let i = 0; i < 4; i++) {
+      skeletonCards.push(h('div', { className: 'metric-card', style: 'animation: skeleton-pulse 1.5s ease-in-out infinite; animation-delay:' + (i * 80) + 'ms' },
+        h('div', { className: 'skeleton-line w40', style: 'height:32px;margin-bottom:8px' }),
+        h('div', { className: 'skeleton-line w70' }),
+      ));
+    }
+    return h('div', { className: 'main-content' }, header,
+      h('div', { className: 'metrics-grid' }, ...skeletonCards),
+      h('div', { className: 'metrics-section' },
+        h('div', { className: 'skeleton-line w40', style: 'margin-bottom:12px' }),
+        h('div', { className: 'skeleton-card', style: 'height:120px;animation: skeleton-pulse 1.5s ease-in-out infinite' }),
+      ),
+    );
+  }
+
+  if (state.metrics.error) {
+    return h('div', { className: 'main-content' }, header,
+      h('div', { className: 'error-banner' }, 'Failed to load metrics: ' + state.metrics.error),
+    );
+  }
+
+  const m = state.metrics;
+
+  // Summary cards
+  const summaryCards = h('div', { className: 'metrics-grid' },
+    h('div', { className: 'metric-card' },
+      h('div', { className: 'metric-card-value' }, String(m.total_items || 0)),
+      h('div', { className: 'metric-card-label' }, 'Total Items'),
+    ),
+    h('div', { className: 'metric-card' },
+      h('div', { className: 'metric-card-value' }, String(m.total_pushes || 0)),
+      h('div', { className: 'metric-card-label' }, 'Total Pushes'),
+    ),
+    h('div', { className: 'metric-card' },
+      h('div', { className: 'metric-card-value' }, String(m.total_installs || 0)),
+      h('div', { className: 'metric-card-label' }, 'Total Installs'),
+    ),
+    h('div', { className: 'metric-card' },
+      h('div', { className: 'metric-card-value' }, String(m.active_users_30d || 0)),
+      h('div', { className: 'metric-card-label' }, 'Active Users (30d)'),
+    ),
+  );
+
+  // Most Installed table
+  const mostInstalled = (m.most_installed || []);
+  const installedSection = mostInstalled.length ? h('div', { className: 'metrics-section' },
+    h('div', { className: 'metrics-section-title' }, 'Most Installed'),
+    h('table', { className: 'metrics-table' },
+      h('thead', {},
+        h('tr', {},
+          h('th', { className: 'metrics-rank' }, '#'),
+          h('th', {}, 'Name'),
+          h('th', {}, 'Namespace'),
+          h('th', {}, 'Type'),
+          h('th', {}, 'Count'),
+        ),
+      ),
+      h('tbody', {}, ...mostInstalled.map((item, i) =>
+        h('tr', {},
+          h('td', { className: 'metrics-rank' }, String(i + 1)),
+          h('td', { style: 'font-weight:500;color:var(--text-primary)' }, item.name || ''),
+          h('td', {}, item.namespace || ''),
+          h('td', {}, h('span', { className: 'type-badge ' + (item.type || '') }, item.type || '')),
+          h('td', { className: 'metrics-count' }, String(item.count || 0)),
+        )
+      )),
+    ),
+  ) : null;
+
+  // Most Pushed table
+  const mostPushed = (m.most_pushed || []);
+  const pushedSection = mostPushed.length ? h('div', { className: 'metrics-section' },
+    h('div', { className: 'metrics-section-title' }, 'Most Pushed'),
+    h('table', { className: 'metrics-table' },
+      h('thead', {},
+        h('tr', {},
+          h('th', { className: 'metrics-rank' }, '#'),
+          h('th', {}, 'Name'),
+          h('th', {}, 'Namespace'),
+          h('th', {}, 'Type'),
+          h('th', {}, 'Count'),
+        ),
+      ),
+      h('tbody', {}, ...mostPushed.map((item, i) =>
+        h('tr', {},
+          h('td', { className: 'metrics-rank' }, String(i + 1)),
+          h('td', { style: 'font-weight:500;color:var(--text-primary)' }, item.name || ''),
+          h('td', {}, item.namespace || ''),
+          h('td', {}, h('span', { className: 'type-badge ' + (item.type || '') }, item.type || '')),
+          h('td', { className: 'metrics-count' }, String(item.count || 0)),
+        )
+      )),
+    ),
+  ) : null;
+
+  // Recent Activity
+  const recentActivity = (m.recent_activity || []);
+  const activitySection = recentActivity.length ? h('div', { className: 'metrics-section' },
+    h('div', { className: 'metrics-section-title' }, 'Recent Activity'),
+    h('div', { className: 'metrics-table', style: 'display:block' },
+      ...recentActivity.map(evt => {
+        const action = (evt.action || '').toLowerCase();
+        return h('div', { className: 'activity-item' },
+          h('span', { className: 'activity-action ' + action }, evt.action || ''),
+          h('span', { className: 'activity-detail' },
+            h('strong', {}, evt.name || ''),
+            ' in ',
+            evt.namespace || '',
+            evt.user ? (' by ' + evt.user) : '',
+          ),
+          h('span', { className: 'activity-time' }, relativeTime(evt.timestamp || evt.time)),
+        );
+      }),
+    ),
+  ) : null;
+
+  return h('div', { className: 'main-content' }, header, summaryCards, installedSection, pushedSection, activitySection);
+}
+
 /* ---------- Render: Main Content ---------- */
 function renderMain() {
+  if (state.viewingMetrics) return renderMetricsView();
   if (state.viewingTokens) {
     return renderTokensView();
   }
@@ -1968,6 +2224,11 @@ function render() {
 
 /* ---------- Keyboard Shortcuts ---------- */
 document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && state.viewingMetrics) {
+    state.viewingMetrics = false;
+    render();
+    return;
+  }
   if (e.key === 'Escape' && state.viewingTokens) {
     state.viewingTokens = false;
     render();
