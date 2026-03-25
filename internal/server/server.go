@@ -181,13 +181,27 @@ func (s *Server) handleSSORedirect(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	verifier := auth.GenerateCodeVerifier()
+	challenge := auth.CodeChallenge(verifier)
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "kit_pkce",
+		Value:    verifier,
+		Path:     "/auth",
+		MaxAge:   300,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+
 	callbackURL := "http://" + r.Host + "/auth/callback"
 	q := url.Values{
-		"client_id":     {cfg.ClientID},
-		"response_type": {"code"},
-		"scope":         {"openid email profile"},
-		"redirect_uri":  {callbackURL},
-		"state":         {"ui"},
+		"client_id":             {cfg.ClientID},
+		"response_type":        {"code"},
+		"scope":                {"openid email profile"},
+		"redirect_uri":         {callbackURL},
+		"state":                {"ui"},
+		"code_challenge":       {challenge},
+		"code_challenge_method": {"S256"},
 	}
 	http.Redirect(w, r, authEndpoint+"?"+q.Encode(), http.StatusFound)
 }
@@ -223,11 +237,24 @@ func (s *Server) handleSSOCallback(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	form := fmt.Sprintf("grant_type=authorization_code&code=%s&redirect_uri=%s&client_id=%s",
-		code, callbackURL, cfg.ClientID)
-	if cfg.ClientSecret != "" {
-		form += "&client_secret=" + cfg.ClientSecret
+	verifier := ""
+	if cookie, err := r.Cookie("kit_pkce"); err == nil {
+		verifier = cookie.Value
 	}
+
+	formValues := url.Values{
+		"grant_type":   {"authorization_code"},
+		"code":         {code},
+		"redirect_uri": {callbackURL},
+		"client_id":    {cfg.ClientID},
+	}
+	if verifier != "" {
+		formValues.Set("code_verifier", verifier)
+	}
+	if cfg.ClientSecret != "" {
+		formValues.Set("client_secret", cfg.ClientSecret)
+	}
+	form := formValues.Encode()
 
 	tokenReq, _ := http.NewRequest("POST", tokenEndpoint, strings.NewReader(form))
 	tokenReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
