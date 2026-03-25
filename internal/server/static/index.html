@@ -596,6 +596,247 @@ code, pre, .mono { font-family: var(--font-mono); }
   gap: 8px;
 }
 
+/* ---------- Token Management ---------- */
+.token-create {
+  background: var(--card-gradient), var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.token-create h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.token-create p {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+.token-create-form {
+  display: flex;
+  gap: 10px;
+}
+.token-create-form input {
+  flex: 1;
+  padding: 10px 14px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  outline: none;
+  transition: border-color var(--transition);
+}
+.token-create-form input:focus {
+  border-color: rgba(34,197,94,0.4);
+}
+.token-create-form input::placeholder { color: var(--text-muted); }
+.btn-create-token {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(34,197,94,0.2);
+}
+.btn-create-token:hover {
+  box-shadow: 0 4px 16px rgba(34,197,94,0.3);
+  transform: translateY(-1px);
+}
+.btn-create-token:active { transform: translateY(0); }
+.btn-create-token:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.token-reveal {
+  background: rgba(34,197,94,0.08);
+  border: 1px solid rgba(34,197,94,0.2);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  margin-top: 16px;
+  animation: card-enter 0.3s ease;
+}
+.token-reveal-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+.token-reveal-value {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+.token-reveal-value code {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-primary);
+  word-break: break-all;
+  user-select: all;
+}
+.btn-copy-token {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-elevated);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.btn-copy-token:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+.btn-copy-token.copied {
+  border-color: rgba(34,197,94,0.3);
+  color: var(--accent);
+}
+.token-reveal-warning {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.token-reveal-warning strong {
+  color: var(--hook-text);
+  font-weight: 600;
+}
+.token-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.token-list-header {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+.token-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--card-gradient), var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition);
+  animation: card-enter 0.3s ease backwards;
+}
+.token-row:hover {
+  border-color: var(--border-hover);
+}
+.token-row-info {
+  flex: 1;
+  min-width: 0;
+}
+.token-row-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.token-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.token-row-prefix {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: rgba(255,255,255,0.04);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.token-revoke {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 6px;
+  background: var(--error-bg);
+  color: var(--error);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.token-revoke:hover {
+  background: rgba(239,68,68,0.15);
+  border-color: rgba(239,68,68,0.3);
+}
+.token-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px;
+  text-align: center;
+  background: var(--card-gradient), var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+.token-empty-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--surface-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  color: var(--text-muted);
+}
+.token-empty-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+.token-empty-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
 /* ---------- Login Screen ---------- */
 .login-overlay {
   display: flex;
@@ -960,6 +1201,8 @@ const icons = {
   menu: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 5h12M3 9h12M3 13h12"/></svg>`,
   x: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg>`,
   user: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="4.5" r="2.5"/><path d="M2.5 12.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4"/></svg>`,
+  copy: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="7" height="7" rx="1.5"/><path d="M9 5V3.5A1.5 1.5 0 007.5 2h-4A1.5 1.5 0 002 3.5v4A1.5 1.5 0 003.5 9H5"/></svg>`,
+  warning: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 1.5L1 12.5h12L7 1.5z"/><path d="M7 6v2.5"/><circle cx="7" cy="10.5" r="0.5" fill="currentColor"/></svg>`,
 };
 
 function icon(name, size) {
@@ -1008,6 +1251,10 @@ const state = {
   viewingItem: null,
   setupMode: false,
   authConfig: null,
+  viewingTokens: false,
+  tokens: [],
+  newTokenName: '',
+  newTokenValue: null,
 };
 
 const baseUrl = window.location.origin;
@@ -1346,8 +1593,8 @@ function renderSidebar() {
   });
 
   const mkItem = (ns, iconName) => h('div', {
-    className: 'sidebar-item' + (state.selected === ns.name ? ' active' : ''),
-    onClick: () => selectNamespace(ns.name),
+    className: 'sidebar-item' + (state.selected === ns.name && !state.viewingTokens ? ' active' : ''),
+    onClick: () => { state.viewingTokens = false; selectNamespace(ns.name); },
   },
     icon(iconName),
     h('span', { className: 'name' }, ns.name),
@@ -1370,8 +1617,8 @@ function renderSidebar() {
     ),
     h('div', { className: 'sidebar-nav' },
       h('div', {
-        className: 'sidebar-item' + (state.selected === null ? ' active' : ''),
-        onClick: () => selectNamespace(null),
+        className: 'sidebar-item' + (state.selected === null && !state.viewingTokens ? ' active' : ''),
+        onClick: () => { state.viewingTokens = false; selectNamespace(null); },
       },
         icon('home'),
         h('span', { className: 'name' }, 'All'),
@@ -1385,6 +1632,23 @@ function renderSidebar() {
         h('div', { className: 'sidebar-section-title' }, 'Personal'),
         ...personal.map(n => mkItem(n, 'lock')),
       ) : null,
+      h('div', { className: 'sidebar-section' },
+        h('div', { className: 'sidebar-section-title' }, 'Settings'),
+        h('div', {
+          className: 'sidebar-item' + (state.viewingTokens ? ' active' : ''),
+          onClick: () => {
+            state.viewingTokens = true;
+            state.viewingItem = null;
+            state.expandedContent = null;
+            state.newTokenValue = null;
+            state.drawerOpen = false;
+            fetchTokens();
+          },
+        },
+          icon('key'),
+          h('span', { className: 'name' }, 'Tokens'),
+        ),
+      ),
     ),
     h('div', { className: 'sidebar-profile' },
       h('div', { className: 'sidebar-profile-info' },
@@ -1493,8 +1757,154 @@ function renderItemDetail() {
   return h('div', { className: 'main-content fade-in' }, backBtn, header, body);
 }
 
+/* ---------- Token API ---------- */
+async function fetchTokens() {
+  try {
+    const data = await apiFetch('/tokens');
+    state.tokens = Array.isArray(data) ? data : [];
+  } catch {
+    state.tokens = [];
+  }
+  render();
+}
+
+async function createToken(name) {
+  if (!name.trim()) return;
+  try {
+    const res = await fetch('/tokens', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + state.token,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name: name.trim() }),
+    });
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+    const data = await res.json();
+    state.newTokenValue = data.token;
+    state.newTokenName = '';
+    await fetchTokens();
+  } catch (e) {
+    state.error = 'Failed to create token: ' + e.message;
+    render();
+  }
+}
+
+async function revokeToken(name) {
+  try {
+    const res = await fetch('/tokens/' + encodeURIComponent(name), {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + state.token },
+    });
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+    state.newTokenValue = null;
+    await fetchTokens();
+  } catch (e) {
+    state.error = 'Failed to revoke token: ' + e.message;
+    render();
+  }
+}
+
+/* ---------- Render: Tokens View ---------- */
+function renderTokensView() {
+  const header = h('div', { className: 'content-header' },
+    h('h2', {}, 'API Tokens'),
+    h('div', { className: 'content-subtitle' }, 'Create and manage API tokens for programmatic access'),
+  );
+
+  // Create token section
+  const nameInput = h('input', {
+    type: 'text',
+    placeholder: 'Token name, e.g. ci-deploy',
+    value: state.newTokenName,
+    onInput: (e) => { state.newTokenName = e.target.value; },
+    onKeydown: (e) => { if (e.key === 'Enter') createToken(state.newTokenName); },
+  });
+
+  const createBtn = h('button', {
+    className: 'btn-create-token',
+    onClick: () => createToken(state.newTokenName),
+  }, icon('key'), 'Create');
+
+  const createSection = h('div', { className: 'token-create' },
+    h('h3', {}, 'Create Token'),
+    h('p', {}, 'Generate a new API token for use with the kit CLI or API.'),
+    h('div', { className: 'token-create-form' }, nameInput, createBtn),
+  );
+
+  // Newly created token reveal
+  let revealSection = null;
+  if (state.newTokenValue) {
+    let copyBtn;
+    const doCopy = () => {
+      navigator.clipboard.writeText(state.newTokenValue).then(() => {
+        copyBtn.classList.add('copied');
+        copyBtn.textContent = '';
+        copyBtn.append(icon('check', 14), ' Copied');
+        setTimeout(() => {
+          copyBtn.classList.remove('copied');
+          copyBtn.textContent = '';
+          copyBtn.append(icon('copy', 14), ' Copy');
+        }, 2000);
+      });
+    };
+    copyBtn = h('button', { className: 'btn-copy-token', onClick: doCopy }, icon('copy', 14), ' Copy');
+
+    revealSection = h('div', { className: 'token-reveal' },
+      h('div', { className: 'token-reveal-label' }, 'New Token Created'),
+      h('div', { className: 'token-reveal-value' },
+        h('code', {}, state.newTokenValue),
+        copyBtn,
+      ),
+      h('div', { className: 'token-reveal-warning' },
+        icon('warning', 14),
+        h('span', {}, h('strong', {}, 'This token will only be shown once.'), ' Copy it now and store it securely.'),
+      ),
+    );
+  }
+
+  // Token list
+  let listSection;
+  if (state.tokens.length === 0) {
+    listSection = h('div', { className: 'token-empty' },
+      h('div', { className: 'token-empty-icon' }, icon('key', 20)),
+      h('div', { className: 'token-empty-title' }, 'No tokens yet'),
+      h('div', { className: 'token-empty-desc' }, 'Create your first API token above.'),
+    );
+  } else {
+    const rows = state.tokens.map((t, i) => {
+      const row = h('div', {
+        className: 'token-row',
+        style: `animation-delay:${i * 40}ms`,
+      },
+        h('div', { className: 'token-row-info' },
+          h('div', { className: 'token-row-name' }, t.name),
+          h('div', { className: 'token-row-meta' },
+            h('span', { className: 'token-row-prefix' }, '...' + (t.prefix || '****')),
+            t.created_at ? h('span', {}, icon('clock', 14), ' Created ' + relativeTime(t.created_at)) : null,
+          ),
+        ),
+        h('button', {
+          className: 'token-revoke',
+          onClick: (e) => { e.stopPropagation(); revokeToken(t.name); },
+        }, icon('x', 14), 'Revoke'),
+      );
+      return row;
+    });
+    listSection = h('div', {},
+      h('div', { className: 'token-list-header' }, 'Existing Tokens'),
+      h('div', { className: 'token-list' }, ...rows),
+    );
+  }
+
+  return h('div', { className: 'main-content' }, header, createSection, revealSection, listSection);
+}
+
 /* ---------- Render: Main Content ---------- */
 function renderMain() {
+  if (state.viewingTokens) {
+    return renderTokensView();
+  }
   if (state.viewingItem) {
     return renderItemDetail();
   }
@@ -1558,6 +1968,11 @@ function render() {
 
 /* ---------- Keyboard Shortcuts ---------- */
 document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && state.viewingTokens) {
+    state.viewingTokens = false;
+    render();
+    return;
+  }
   if (e.key === 'Escape' && state.viewingItem) {
     state.viewingItem = null;
     state.expandedContent = null;
