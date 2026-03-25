@@ -117,7 +117,7 @@ KIT_OIDC_CLIENT_SECRET=your-client-secret
 
 | Variable | Required | Description |
 |---|---|---|
-| `KIT_SECRET` | Yes | Secret key for JWT signing and encryption. Keep secure. |
+| `KIT_SECRET` | Yes | Random string for JWT signing and encryption. Generate with `openssl rand -hex 32`. |
 | `DATABASE_URL` | Yes | Postgres connection string |
 | `PORT` | No | HTTP port (default: `80`) |
 | `KIT_OIDC_ISSUER` | No | OIDC issuer URL for SSO |
