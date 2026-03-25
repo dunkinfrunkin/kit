@@ -52,6 +52,21 @@ func New(server, token string) *Client {
 	}
 }
 
+func (c *Client) Whoami() (string, error) {
+	resp, err := c.do("GET", "/whoami", nil)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	var data struct {
+		Email string `json:"email"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return "", err
+	}
+	return data.Email, nil
+}
+
 func (c *Client) Login(email string) (*LoginResponse, error) {
 	resp, err := c.do("POST", "/login", map[string]string{"email": email})
 	if err != nil {

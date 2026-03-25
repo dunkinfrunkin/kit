@@ -52,12 +52,16 @@ brew install dunkinfrunkin/tap/kit
 
 ### Login
 
-```bash
-# Email auth (simple/personal)
-kit login --server https://kit.yourcompany.com
+1. Sign in to the dashboard via SSO at `https://kit.yourcompany.com`
+2. Create an API token in the dashboard
+3. Use it in the CLI:
 
-# SSO (enterprise)
-kit login --server https://kit.yourcompany.com --sso
+```bash
+kit login --server https://kit.yourcompany.com --token kit_abc123
+
+# Or paste it interactively:
+kit login --server https://kit.yourcompany.com
+> API Token: kit_abc123
 ```
 
 ## SSO Setup

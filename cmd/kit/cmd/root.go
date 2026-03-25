@@ -25,7 +25,6 @@ func init() {
 	rootCmd.AddCommand(syncCmd)
 	rootCmd.AddCommand(doctorCmd)
 	rootCmd.AddCommand(profileCmd)
-	rootCmd.AddCommand(tokenCmd)
 }
 
 func Execute() error {
