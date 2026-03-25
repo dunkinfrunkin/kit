@@ -9,5 +9,6 @@ RUN CGO_ENABLED=0 go build -o /bin/kitd ./cmd/kitd
 FROM alpine:3.20
 RUN apk add --no-cache ca-certificates
 COPY --from=builder /bin/kitd /bin/kitd
-EXPOSE 8430
+EXPOSE 80
+ENV PORT=80
 ENTRYPOINT ["/bin/kitd"]
