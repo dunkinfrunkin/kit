@@ -1548,6 +1548,14 @@ async function toggleExpand(item) {
 }
 
 let searchTimeout;
+function refocusSearch() {
+  const el = $('.main-search-input');
+  if (el) {
+    el.focus();
+    el.setSelectionRange(el.value.length, el.value.length);
+  }
+}
+
 function doSearch(query) {
   state.searchQuery = query;
   state.expanded = null;
@@ -1571,6 +1579,7 @@ function doSearch(query) {
     (it.name.toLowerCase().includes(q) || it.type.toLowerCase().includes(q) || it.namespace.toLowerCase().includes(q) || (it.author||'').toLowerCase().includes(q))
   );
   render();
+  refocusSearch();
 
   // Debounced server search
   clearTimeout(searchTimeout);
@@ -1588,6 +1597,7 @@ function doSearch(query) {
         }));
       }
       render();
+      refocusSearch();
     } catch { /* keep client-side results */ }
   }, 400);
 }
