@@ -43,6 +43,33 @@ type APITokenRow struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type Event struct {
+	ID        int       `json:"id"`
+	Action    string    `json:"action"`
+	Namespace string    `json:"namespace"`
+	ItemType  string    `json:"item_type,omitempty"`
+	ItemName  string    `json:"item_name,omitempty"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type ItemStats struct {
+	Namespace string `json:"namespace"`
+	Type      string `json:"type"`
+	Name      string `json:"name"`
+	Count     int    `json:"count"`
+}
+
+type MetricsSummary struct {
+	TotalItems    int         `json:"total_items"`
+	TotalPushes   int         `json:"total_pushes"`
+	TotalInstalls int         `json:"total_installs"`
+	TopInstalled  []ItemStats `json:"top_installed"`
+	TopPushed     []ItemStats `json:"top_pushed"`
+	RecentEvents  []Event     `json:"recent_events"`
+	ActiveUsers   int         `json:"active_users"`
+}
+
 type Store struct {
 	db *sql.DB
 }
@@ -102,6 +129,18 @@ func (s *Store) Migrate() error {
 			created_at TIMESTAMPTZ DEFAULT NOW(),
 			UNIQUE(email, name)
 		);
+
+		CREATE TABLE IF NOT EXISTS events (
+			id         SERIAL PRIMARY KEY,
+			action     TEXT NOT NULL,
+			namespace  TEXT NOT NULL,
+			item_type  TEXT,
+			item_name  TEXT,
+			email      TEXT NOT NULL,
+			created_at TIMESTAMPTZ DEFAULT NOW()
+		);
+		CREATE INDEX IF NOT EXISTS idx_events_created_at ON events(created_at);
+		CREATE INDEX IF NOT EXISTS idx_events_action ON events(action);
 	`)
 	return err
 }
@@ -412,6 +451,87 @@ func (s *Store) GetAPITokenEmail(tokenHash string) (string, error) {
 		return "", fmt.Errorf("looking up api token: %w", err)
 	}
 	return email, nil
+}
+
+func (s *Store) RecordEvent(action, namespace, itemType, itemName, email string) error {
+	_, err := s.db.Exec(
+		`INSERT INTO events (action, namespace, item_type, item_name, email) VALUES ($1, $2, $3, $4, $5)`,
+		action, namespace, itemType, itemName, email,
+	)
+	return err
+}
+
+func (s *Store) GetMetrics() (*MetricsSummary, error) {
+	var m MetricsSummary
+
+	// Total items
+	s.db.QueryRow(`SELECT COUNT(*) FROM items`).Scan(&m.TotalItems)
+
+	// Total pushes
+	s.db.QueryRow(`SELECT COUNT(*) FROM events WHERE action = 'push'`).Scan(&m.TotalPushes)
+
+	// Total installs
+	s.db.QueryRow(`SELECT COUNT(*) FROM events WHERE action = 'install'`).Scan(&m.TotalInstalls)
+
+	// Active users (last 30 days)
+	s.db.QueryRow(`SELECT COUNT(DISTINCT email) FROM events WHERE created_at > NOW() - INTERVAL '30 days'`).Scan(&m.ActiveUsers)
+
+	// Top 10 installed
+	rows, err := s.db.Query(`
+		SELECT namespace, item_type, item_name, COUNT(*) as cnt
+		FROM events WHERE action = 'install'
+		GROUP BY namespace, item_type, item_name
+		ORDER BY cnt DESC LIMIT 10
+	`)
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var is ItemStats
+			rows.Scan(&is.Namespace, &is.Type, &is.Name, &is.Count)
+			m.TopInstalled = append(m.TopInstalled, is)
+		}
+	}
+	if m.TopInstalled == nil {
+		m.TopInstalled = []ItemStats{}
+	}
+
+	// Top 10 pushed
+	rows2, err := s.db.Query(`
+		SELECT namespace, item_type, item_name, COUNT(*) as cnt
+		FROM events WHERE action = 'push'
+		GROUP BY namespace, item_type, item_name
+		ORDER BY cnt DESC LIMIT 10
+	`)
+	if err == nil {
+		defer rows2.Close()
+		for rows2.Next() {
+			var is ItemStats
+			rows2.Scan(&is.Namespace, &is.Type, &is.Name, &is.Count)
+			m.TopPushed = append(m.TopPushed, is)
+		}
+	}
+	if m.TopPushed == nil {
+		m.TopPushed = []ItemStats{}
+	}
+
+	// Recent 50 events
+	rows3, err := s.db.Query(`
+		SELECT id, action, namespace, COALESCE(item_type, ''), COALESCE(item_name, ''), email, created_at
+		FROM events ORDER BY created_at DESC LIMIT 50
+	`)
+	if err == nil {
+		defer rows3.Close()
+		for rows3.Next() {
+			var e Event
+			rows3.Scan(&e.ID, &e.Action, &e.Namespace, &e.ItemType, &e.ItemName, &e.Email, &e.CreatedAt)
+			m.RecentEvents = append(m.RecentEvents, e)
+		}
+	}
+	if m.RecentEvents == nil {
+		m.RecentEvents = []Event{}
+	}
+
+	return &m, nil
 }
 
 func scanItems(rows *sql.Rows) ([]Item, error) {
