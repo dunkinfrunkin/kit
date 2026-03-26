@@ -341,22 +341,11 @@ code, pre, .mono { font-family: var(--font-mono); }
 }
 .main-search {
   margin-bottom: 24px;
-  position: relative;
-}
-.main-search svg {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-  pointer-events: none;
-  width: 16px;
-  height: 16px;
 }
 .main-search-input {
   width: 100%;
   padding: 12px 16px 12px 40px;
-  background: var(--surface-elevated);
+  background: var(--surface-elevated) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235c5c5f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") 14px center no-repeat;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   color: var(--text-primary);
@@ -2215,7 +2204,7 @@ function renderMain() {
     onInput: (e) => doSearch(e.target.value),
   });
 
-  const searchBar = h('div', { className: 'main-search' }, icon('search'), searchInput);
+  const searchBar = h('div', { className: 'main-search' }, searchInput);
 
   const header = h('div', { className: 'content-header' },
     h('h2', {}, title),
