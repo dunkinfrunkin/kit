@@ -70,6 +70,13 @@ type MetricsSummary struct {
 	ActiveUsers   int         `json:"active_users"`
 }
 
+type ItemVersion struct {
+	Version   int       `json:"version"`
+	Author    string    `json:"author"`
+	CreatedAt time.Time `json:"created_at"`
+	Size      int       `json:"size"`
+}
+
 type Store struct {
 	db *sql.DB
 }
@@ -141,6 +148,18 @@ func (s *Store) Migrate() error {
 		);
 		CREATE INDEX IF NOT EXISTS idx_events_created_at ON events(created_at);
 		CREATE INDEX IF NOT EXISTS idx_events_action ON events(action);
+
+		CREATE TABLE IF NOT EXISTS item_versions (
+			id         SERIAL PRIMARY KEY,
+			namespace  TEXT NOT NULL,
+			type       TEXT NOT NULL,
+			name       TEXT NOT NULL,
+			version    INTEGER NOT NULL,
+			content    BYTEA NOT NULL,
+			author     TEXT NOT NULL,
+			created_at TIMESTAMPTZ DEFAULT NOW()
+		);
+		CREATE INDEX IF NOT EXISTS idx_item_versions_lookup ON item_versions(namespace, type, name, version DESC);
 	`)
 	return err
 }
@@ -164,6 +183,13 @@ func (s *Store) PushItem(namespace, itemType, name string, content []byte, autho
 	if err != nil {
 		return nil, fmt.Errorf("pushing item: %w", err)
 	}
+
+	// Best-effort: record version history
+	_, _ = s.db.Exec(`
+		INSERT INTO item_versions (namespace, type, name, version, content, author)
+		VALUES ($1, $2, $3, $4, $5, $6)
+	`, namespace, itemType, name, item.Version, content, author)
+
 	return &item, nil
 }
 
@@ -533,6 +559,46 @@ func (s *Store) GetMetrics() (*MetricsSummary, error) {
 	}
 
 	return &m, nil
+}
+
+func (s *Store) ListItemVersions(namespace, itemType, name string) ([]ItemVersion, error) {
+	rows, err := s.db.Query(`
+		SELECT version, author, created_at, octet_length(content)
+		FROM item_versions
+		WHERE namespace = $1 AND type = $2 AND name = $3
+		ORDER BY version DESC
+	`, namespace, itemType, name)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var versions []ItemVersion
+	for rows.Next() {
+		var v ItemVersion
+		rows.Scan(&v.Version, &v.Author, &v.CreatedAt, &v.Size)
+		versions = append(versions, v)
+	}
+	if versions == nil {
+		versions = []ItemVersion{}
+	}
+	return versions, rows.Err()
+}
+
+func (s *Store) GetItemVersion(namespace, itemType, name string, version int) (*Item, error) {
+	var item Item
+	err := s.db.QueryRow(`
+		SELECT namespace, type, name, version, content, author, created_at
+		FROM item_versions
+		WHERE namespace = $1 AND type = $2 AND name = $3 AND version = $4
+	`, namespace, itemType, name, version).Scan(
+		&item.Namespace, &item.Type, &item.Name,
+		&item.Version, &item.Content, &item.Author, &item.CreatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	item.UpdatedAt = item.CreatedAt
+	return &item, nil
 }
 
 func scanItems(rows *sql.Rows) ([]Item, error) {

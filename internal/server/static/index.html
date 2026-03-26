@@ -457,6 +457,12 @@ code, pre, .mono { font-family: var(--font-mono); }
 }
 
 /* ---------- Expanded Card Content ---------- */
+.detail-layout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 24px;
+  align-items: start;
+}
 .detail-content {
   background: var(--bg);
   border: 1px solid var(--border);
@@ -469,6 +475,81 @@ code, pre, .mono { font-family: var(--font-mono); }
   white-space: pre-wrap;
   word-break: break-word;
   tab-size: 2;
+}
+.detail-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.detail-meta-card {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+.detail-meta-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+.detail-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 13px;
+}
+.detail-meta-label { color: var(--text-muted); }
+.detail-meta-value { color: var(--text-primary); font-weight: 500; }
+.version-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.version-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.version-row:last-child { border-bottom: none; }
+.version-num {
+  font-weight: 600;
+  color: var(--accent);
+  min-width: 32px;
+}
+.version-num.current {
+  background: var(--accent-dim);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.version-info {
+  flex: 1;
+  min-width: 0;
+}
+.version-author {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.version-time {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.version-size {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+@media (max-width: 1024px) {
+  .detail-layout { grid-template-columns: 1fr; }
 }
 .card-expand-content {
   margin-top: 16px;
@@ -1367,6 +1448,7 @@ const state = {
   email: '',
   drawerOpen: false,
   viewingItem: null,
+  itemVersions: null,
   setupMode: false,
   authConfig: null,
   viewingTokens: false,
@@ -1853,18 +1935,37 @@ function renderCard(item, index) {
 async function openItemDetail(item) {
   state.viewingItem = item;
   state.expandedContent = null;
+  state.itemVersions = null;
   render();
-  try {
-    const data = await apiFetch(
-      '/' + encodeURIComponent(item.namespace) + '/' + item.type + 's/' + encodeURIComponent(item.name)
-    );
-    const content = data.content || data.Content || '';
+
+  const base = '/' + encodeURIComponent(item.namespace) + '/' + item.type + 's/' + encodeURIComponent(item.name);
+
+  const [contentRes, versionsRes] = await Promise.allSettled([
+    apiFetch(base),
+    apiFetch(base + '/versions'),
+  ]);
+
+  if (contentRes.status === 'fulfilled') {
+    const content = contentRes.value.content || contentRes.value.Content || '';
     try { state.expandedContent = atob(content); }
-    catch { state.expandedContent = typeof content === 'string' ? content : JSON.stringify(data, null, 2); }
-  } catch (e) {
-    state.expandedContent = 'Error loading content: ' + e.message;
+    catch { state.expandedContent = typeof content === 'string' ? content : JSON.stringify(contentRes.value, null, 2); }
+  } else {
+    state.expandedContent = 'Error loading content: ' + contentRes.reason.message;
   }
+
+  if (versionsRes.status === 'fulfilled' && Array.isArray(versionsRes.value)) {
+    state.itemVersions = versionsRes.value;
+  } else {
+    state.itemVersions = [];
+  }
+
   render();
+}
+
+function formatBytes(bytes) {
+  if (!bytes || bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1048576).toFixed(1) + ' MB';
 }
 
 function renderItemDetail() {
@@ -1873,6 +1974,7 @@ function renderItemDetail() {
   const backBtn = h('button', { className: 'btn-ghost', style: 'margin-bottom:20px;gap:6px', onClick: () => {
     state.viewingItem = null;
     state.expandedContent = null;
+    state.itemVersions = null;
     render();
   }},
     (() => { const s = document.createElement('span'); s.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>'; return s; })(),
@@ -1885,16 +1987,12 @@ function renderItemDetail() {
       h('span', { className: 'ns-badge' }, item.namespace),
     ),
     h('h2', { style: 'font-size:24px;font-weight:700;color:var(--text-primary);margin-bottom:8px' }, item.name),
-    h('div', { className: 'card-meta' },
-      item.author ? h('span', { className: 'card-meta-item' }, icon('user', 14), item.author) : null,
-      item.version ? h('span', { className: 'card-meta-item' }, icon('check', 14), h('span', { className: 'version-badge' }, item.version)) : null,
-      item.updated ? h('span', { className: 'card-meta-item' }, icon('clock', 14), relativeTime(item.updated)) : null,
-    ),
   );
 
-  let body;
+  // Left: content
+  let contentEl;
   if (state.expandedContent === null) {
-    body = h('div', { style: 'padding:24px 0' },
+    contentEl = h('div', { style: 'padding:24px 0' },
       h('div', { className: 'skeleton-line w70', style: 'animation: skeleton-pulse 1.5s ease-in-out infinite' }),
       h('div', { className: 'skeleton-line w55', style: 'animation: skeleton-pulse 1.5s ease-in-out infinite; animation-delay:100ms' }),
       h('div', { className: 'skeleton-line w40', style: 'animation: skeleton-pulse 1.5s ease-in-out infinite; animation-delay:200ms' }),
@@ -1902,10 +2000,63 @@ function renderItemDetail() {
   } else {
     const pre = h('pre', { className: 'detail-content' });
     pre.innerHTML = highlightSyntax(state.expandedContent);
-    body = pre;
+    contentEl = pre;
   }
 
-  return h('div', { className: 'main-content fade-in' }, backBtn, header, body);
+  // Right: metadata + versions
+  const metaCard = h('div', { className: 'detail-meta-card' },
+    h('div', { className: 'detail-meta-title' }, 'Details'),
+    h('div', { className: 'detail-meta-row' },
+      h('span', { className: 'detail-meta-label' }, 'Author'),
+      h('span', { className: 'detail-meta-value' }, item.author || '-'),
+    ),
+    h('div', { className: 'detail-meta-row' },
+      h('span', { className: 'detail-meta-label' }, 'Version'),
+      h('span', { className: 'detail-meta-value' }, 'v' + (item.version || '1')),
+    ),
+    h('div', { className: 'detail-meta-row' },
+      h('span', { className: 'detail-meta-label' }, 'Namespace'),
+      h('span', { className: 'detail-meta-value' }, item.namespace),
+    ),
+    h('div', { className: 'detail-meta-row' },
+      h('span', { className: 'detail-meta-label' }, 'Updated'),
+      h('span', { className: 'detail-meta-value' }, item.updated ? relativeTime(item.updated) : '-'),
+    ),
+  );
+
+  let versionCard;
+  if (state.itemVersions === null) {
+    versionCard = h('div', { className: 'detail-meta-card' },
+      h('div', { className: 'detail-meta-title' }, 'Version History'),
+      h('div', { className: 'skeleton-line w70', style: 'animation: skeleton-pulse 1.5s ease-in-out infinite' }),
+      h('div', { className: 'skeleton-line w55', style: 'animation: skeleton-pulse 1.5s ease-in-out infinite; animation-delay:100ms' }),
+    );
+  } else if (state.itemVersions.length === 0) {
+    versionCard = h('div', { className: 'detail-meta-card' },
+      h('div', { className: 'detail-meta-title' }, 'Version History'),
+      h('div', { style: 'font-size:13px;color:var(--text-muted)' }, 'No version history'),
+    );
+  } else {
+    const rows = state.itemVersions.map((v, i) =>
+      h('div', { className: 'version-row' },
+        h('span', { className: 'version-num' + (i === 0 ? ' current' : '') }, 'v' + v.version),
+        h('div', { className: 'version-info' },
+          h('div', { className: 'version-author' }, v.author),
+          h('div', { className: 'version-time' }, v.created_at ? relativeTime(v.created_at) : ''),
+        ),
+        h('span', { className: 'version-size' }, formatBytes(v.size)),
+      )
+    );
+    versionCard = h('div', { className: 'detail-meta-card' },
+      h('div', { className: 'detail-meta-title' }, 'Version History'),
+      h('div', { className: 'version-list' }, ...rows),
+    );
+  }
+
+  const sidebar = h('div', { className: 'detail-sidebar' }, metaCard, versionCard);
+  const layout = h('div', { className: 'detail-layout' }, contentEl, sidebar);
+
+  return h('div', { className: 'main-content fade-in' }, backBtn, header, layout);
 }
 
 /* ---------- Token API ---------- */

@@ -96,6 +96,10 @@ func New(s *store.Store, secret string, oidc *auth.OIDCVerifier) *Server {
 	srv.mux.HandleFunc("POST /{namespace}/hooks", srv.handlePush("hook"))
 	srv.mux.HandleFunc("POST /{namespace}/configs", srv.handlePush("config"))
 
+	srv.mux.HandleFunc("GET /{namespace}/skills/{name}/versions", srv.handleListVersions("skill"))
+	srv.mux.HandleFunc("GET /{namespace}/hooks/{name}/versions", srv.handleListVersions("hook"))
+	srv.mux.HandleFunc("GET /{namespace}/configs/{name}/versions", srv.handleListVersions("config"))
+
 	srv.mux.HandleFunc("DELETE /{namespace}/skills/{name}", srv.handleDelete("skill"))
 	srv.mux.HandleFunc("DELETE /{namespace}/hooks/{name}", srv.handleDelete("hook"))
 	srv.mux.HandleFunc("DELETE /{namespace}/configs/{name}", srv.handleDelete("config"))
@@ -493,6 +497,23 @@ func (s *Server) handleDelete(itemType string) http.HandlerFunc {
 
 		s.json(w, http.StatusOK, map[string]string{"status": "deleted"})
 		go s.store.RecordEvent("delete", namespace, itemType, name, email)
+	}
+}
+
+func (s *Server) handleListVersions(itemType string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if _, err := s.authenticate(r); err != nil {
+			s.error(w, http.StatusUnauthorized, "unauthorized")
+			return
+		}
+		namespace := r.PathValue("namespace")
+		name := r.PathValue("name")
+		versions, err := s.store.ListItemVersions(namespace, itemType, name)
+		if err != nil {
+			s.error(w, http.StatusInternalServerError, "failed to list versions")
+			return
+		}
+		s.json(w, http.StatusOK, versions)
 	}
 }
 
