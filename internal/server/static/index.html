@@ -326,6 +326,10 @@ code, pre, .mono { font-family: var(--font-mono); }
   background: var(--bg);
 }
 .content-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
   margin-bottom: 28px;
 }
 .content-header h2 {
@@ -339,6 +343,31 @@ code, pre, .mono { font-family: var(--font-mono); }
   color: var(--text-muted);
   margin-top: 4px;
 }
+.main-search-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.main-search-wrap svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+}
+.main-search-input {
+  width: 280px;
+  padding: 9px 12px 9px 36px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  outline: none;
+  transition: border-color var(--transition);
+}
+.main-search-input:focus { border-color: var(--accent); }
+.main-search-input::placeholder { color: var(--text-muted); }
 
 /* ---------- Card Grid ---------- */
 .card-grid {
@@ -2172,13 +2201,24 @@ function renderMain() {
     return renderItemDetail();
   }
 
-  const title = state.selected || 'All Items';
+  const title = state.searchQuery ? 'Search: "' + state.searchQuery + '"' : (state.selected || 'All Items');
   const count = state.items.length;
   const subtitle = state.loading ? 'Loading...' : (count + ' item' + (count !== 1 ? 's' : ''));
 
+  const searchInput = h('input', {
+    className: 'main-search-input',
+    type: 'text',
+    placeholder: 'Search skills, hooks, configs...',
+    value: state.searchQuery,
+    onInput: (e) => doSearch(e.target.value),
+  });
+
   const header = h('div', { className: 'content-header' },
-    h('h2', {}, title),
-    h('div', { className: 'content-subtitle' }, subtitle),
+    h('div', {},
+      h('h2', {}, title),
+      h('div', { className: 'content-subtitle' }, subtitle),
+    ),
+    h('div', { className: 'main-search-wrap' }, icon('search'), searchInput),
   );
 
   let body;
@@ -2195,10 +2235,10 @@ function renderMain() {
     );
   } else if (!state.items.length) {
     body = h('div', { className: 'empty-state' },
-      h('div', { className: 'empty-icon' }, icon('pkg', 20)),
-      h('div', { className: 'empty-title' }, 'No items found'),
+      h('div', { className: 'empty-icon' }, icon('search', 20)),
+      h('div', { className: 'empty-title' }, state.searchQuery ? 'No results for "' + state.searchQuery + '"' : 'No items found'),
       h('div', { className: 'empty-desc' },
-        'Push something with ', h('code', {}, 'kit push'), ' to see it here.'),
+        state.searchQuery ? 'Try a different search term.' : h('span', {}, 'Push something with ', h('code', {}, 'kit push'), ' to see it here.')),
     );
   } else {
     const cards = state.items.map((item, i) => renderCard(item, i));
