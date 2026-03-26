@@ -254,7 +254,8 @@ func (s *Store) SearchItems(query string) ([]Item, error) {
 	rows, err := s.db.Query(`
 		SELECT id, namespace, type, name, author, version, created_at, updated_at
 		FROM items
-		WHERE name ILIKE $1 AND namespace NOT LIKE '@%'
+		WHERE (name ILIKE $1 OR namespace ILIKE $1 OR author ILIKE $1 OR type ILIKE $1)
+		  AND namespace NOT LIKE '@%'
 		ORDER BY name
 	`, pattern)
 	if err != nil {
