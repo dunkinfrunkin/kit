@@ -1532,6 +1532,9 @@ function doSearch(query) {
   state.searchQuery = query;
   state.expanded = null;
   state.expandedContent = null;
+  state.viewingItem = null;
+  state.viewingTokens = false;
+  state.viewingMetrics = false;
 
   if (!query.trim()) {
     state.selected ? selectNamespace(state.selected) : selectNamespace(null);
@@ -1554,12 +1557,16 @@ function doSearch(query) {
   searchTimeout = setTimeout(async () => {
     try {
       const results = await apiFetch('/search?q=' + encodeURIComponent(query));
-      state.items = buildAllItems(
-        (results.skills || []),
-        (results.hooks || []),
-        (results.configs || []),
-      );
-      if (Array.isArray(results)) state.items = buildAllItems(results, [], []);
+      if (Array.isArray(results)) {
+        state.items = results.map(it => ({
+          namespace: it.namespace,
+          type: it.type,
+          name: it.name,
+          author: it.author,
+          version: it.version,
+          updated: it.updated_at,
+        }));
+      }
       render();
     } catch { /* keep client-side results */ }
   }, 400);
